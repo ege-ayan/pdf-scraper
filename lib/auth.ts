@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { registerApiSchema } from "@/lib/schemas";
+import { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 interface RegisterData {
   name: string;
@@ -75,3 +77,41 @@ export async function registerUser(
     };
   }
 }
+
+export const authOptions: AuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.hashedPassword
+        );
+
+        if (!isCorrectPassword) {
+          throw new Error("Invalid credentials");
+        }
+
+        return user;
+      },
+    }),
+  ],
+
+  secret: process.env.NEXTAUTH_SECRET,
+};
