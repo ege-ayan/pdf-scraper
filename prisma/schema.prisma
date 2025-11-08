@@ -14,4 +14,19 @@ model User {
   name           String
   email          String    @unique
   hashedPassword String
+
+  uploads        ResumeHistory[]
+  @@map("users")
+}
+
+model ResumeHistory { 
+  id         String   @id @default(cuid())
+  fileName   String
+  uploadedAt DateTime @default(now())
+  resumeData Json
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("resume_history")
 }

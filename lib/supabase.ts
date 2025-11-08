@@ -1,0 +1,85 @@
+import { createClient } from "@supabase/supabase-js";
+import { type UploadedImage } from "./types";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const bucketName = "pdf-scraper";
+const folderName = "resume-images";
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase environment variables");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false,
+  },
+});
+
+export async function uploadImageToStorage(
+  blob: Blob,
+  filename: string
+): Promise<UploadedImage> {
+  try {
+    const fileExt = "jpg";
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+    const filePath = `${folderName}/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, blob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    if (!urlData.publicUrl) {
+      throw new Error("Failed to get public URL for uploaded image");
+    }
+
+    return {
+      url: urlData.publicUrl,
+      path: filePath,
+    };
+  } catch (error) {
+    console.error("Image upload error:", error);
+    throw error;
+  }
+}
+
+export async function uploadImagesToStorage(
+  blobs: Blob[]
+): Promise<UploadedImage[]> {
+  const uploadPromises = blobs.map((blob, index) =>
+    uploadImageToStorage(blob, `page-${index + 1}`)
+  );
+
+  try {
+    const results = await Promise.all(uploadPromises);
+    return results;
+  } catch (error) {
+    console.error("Multiple image upload error:", error);
+    throw error;
+  }
+}
+
+export async function cleanupImages(paths: string[]): Promise<void> {
+  try {
+    const { error } = await supabase.storage.from(bucketName).remove(paths);
+
+    if (error) {
+      console.warn("Failed to cleanup images:", error.message);
+    }
+  } catch (error) {
+    console.warn("Cleanup error:", error);
+  }
+}

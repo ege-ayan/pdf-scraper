@@ -1,0 +1,197 @@
+import { EmploymentType, LocationType, Degree, LanguageLevel } from "../types";
+
+export const resumeStructuredSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    profile: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        name: { type: "string" },
+        surname: { type: "string" },
+        email: { type: "string", format: "email" },
+        headline: { type: "string" },
+        professionalSummary: { type: "string" },
+        linkedIn: { type: ["string", "null"] },
+        website: { type: ["string", "null"] },
+        country: { type: "string" },
+        city: { type: "string" },
+        relocation: { type: "boolean" },
+        remote: { type: "boolean" },
+      },
+      required: [
+        "name",
+        "surname",
+        "email",
+        "headline",
+        "professionalSummary",
+        "linkedIn",
+        "website",
+        "country",
+        "city",
+        "relocation",
+        "remote",
+      ],
+    },
+    workExperiences: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          jobTitle: { type: "string" },
+          employmentType: {
+            type: "string",
+            enum: Object.values(EmploymentType),
+          },
+          locationType: {
+            type: "string",
+            enum: Object.values(LocationType),
+          },
+          company: { type: "string" },
+          startMonth: { type: ["integer", "null"], minimum: 1, maximum: 12 },
+          startYear: { type: ["integer", "null"] },
+          endMonth: { type: ["integer", "null"], minimum: 1, maximum: 12 },
+          endYear: { type: ["integer", "null"] },
+          current: { type: "boolean" },
+          description: { type: "string" },
+        },
+        required: [
+          "jobTitle",
+          "employmentType",
+          "locationType",
+          "company",
+          "startMonth",
+          "startYear",
+          "endMonth",
+          "endYear",
+          "current",
+          "description",
+        ],
+      },
+    },
+    educations: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          school: { type: "string" },
+          degree: {
+            type: "string",
+            enum: Object.values(Degree),
+          },
+          major: { type: ["string", "null"] },
+          startYear: { type: "integer" },
+          endYear: { type: ["integer", "null"] },
+          current: { type: "boolean" },
+          description: { type: ["string", "null"] },
+        },
+        required: [
+          "school",
+          "degree",
+          "major",
+          "startYear",
+          "endYear",
+          "current",
+          "description",
+        ],
+      },
+    },
+    skills: {
+      type: "array",
+      items: { type: "string" },
+    },
+    licenses: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          issuer: { type: "string" },
+          issueYear: { type: "integer" },
+          description: { type: ["string", "null"] },
+        },
+        required: ["name", "issuer", "issueYear", "description"],
+      },
+    },
+    languages: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          language: { type: "string" },
+          level: {
+            type: "string",
+            enum: Object.values(LanguageLevel),
+          },
+        },
+        required: ["language", "level"],
+      },
+    },
+    achievements: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          title: { type: "string" },
+          organization: { type: "string" },
+          achieveDate: { type: "string" },
+          description: { type: "string" },
+        },
+        required: ["title", "organization", "achieveDate", "description"],
+      },
+    },
+    publications: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          title: { type: "string" },
+          publisher: { type: "string" },
+          publicationDate: { type: "string" },
+          publicationUrl: { type: "string" },
+          description: { type: "string" },
+        },
+        required: [
+          "title",
+          "publisher",
+          "publicationDate",
+          "publicationUrl",
+          "description",
+        ],
+      },
+    },
+    honors: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          title: { type: "string" },
+          issuer: { type: "string" },
+          issueMonth: { type: "integer", minimum: 1, maximum: 12 },
+          issueYear: { type: "integer" },
+          description: { type: "string" },
+        },
+        required: ["title", "issuer", "issueMonth", "issueYear", "description"],
+      },
+    },
+  },
+  required: [
+    "profile",
+    "workExperiences",
+    "educations",
+    "skills",
+    "licenses",
+    "languages",
+    "achievements",
+    "publications",
+    "honors",
+  ],
+};
