@@ -1,8 +1,14 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, History, FileText } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Upload, History } from "lucide-react";
 import ResumeUploader from "./_components/resume-uploader";
 
 export const metadata: Metadata = {
@@ -12,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+    <div className="min-h-screen  p-4">
       <div className="max-w-6xl mx-auto py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">
@@ -23,7 +29,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Navigation Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader>
@@ -63,7 +68,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Upload Section */}
         <ResumeUploader />
       </div>
     </div>

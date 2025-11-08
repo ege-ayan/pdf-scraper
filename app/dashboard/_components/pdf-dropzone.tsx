@@ -32,7 +32,7 @@ export default function PdfDropzone({
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
     disabled: isLoading,
   });
 
@@ -99,7 +99,7 @@ export default function PdfDropzone({
             className="mt-6"
             onClick={(e) => {
               e.stopPropagation();
-              // Trigger file input click
+
               const input = document.querySelector(
                 'input[type="file"]'
               ) as HTMLInputElement;
