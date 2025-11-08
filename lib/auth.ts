@@ -86,6 +86,7 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
@@ -118,6 +119,10 @@ export const authOptions: AuthOptions = {
   ],
 
   secret: process.env.NEXTAUTH_SECRET,
+
+  pages: {
+    signIn: "/auth/login",
+  },
 
   callbacks: {
     jwt: async ({ token, user }) => {
