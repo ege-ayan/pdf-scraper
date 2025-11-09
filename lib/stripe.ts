@@ -176,26 +176,11 @@ export async function handleSubscriptionUpdate(
     }
   } else if (priceId === STRIPE_PRICES.PRO) {
     planType = PlanType.PRO;
-    // Add PRO credits for new subscriptions or upgrades
-    if (user.planType === PlanType.FREE) {
-      creditsToAdd = PLAN_CREDITS.PRO;
-      console.log(
-        `Upgrading from FREE to PRO - adding ${creditsToAdd} credits`
-      );
-    } else if (user.planType === PlanType.BASIC) {
-      creditsToAdd = PLAN_CREDITS.PRO; // Add full PRO credits
-      console.log(
-        `Upgrading from BASIC to PRO - adding ${creditsToAdd} credits`
-      );
-    } else if (user.planType === PlanType.PRO) {
-      console.log(`User already has PRO plan - not adding additional credits`);
-    } else {
-      // Handle case where user cancelled subscription but has credits preserved
-      creditsToAdd = PLAN_CREDITS.PRO;
-      console.log(
-        `Reactivating PRO subscription - adding ${creditsToAdd} credits to existing ${user.credits}`
-      );
-    }
+    creditsToAdd = PLAN_CREDITS.PRO; // Always add 20k credits when subscribing to PRO
+
+    console.log(
+      `User subscribing to PRO - adding ${creditsToAdd} credits to existing ${user.credits} balance`
+    );
   } else {
     console.log(`Unknown price ID: ${priceId} - keeping FREE plan`);
   }
