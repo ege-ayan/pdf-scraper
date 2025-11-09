@@ -1,4 +1,4 @@
-import { EmploymentType, LocationType, Degree, LanguageLevel } from "./enums";
+import { EmploymentType, LocationType, Degree, LanguageLevel, ProcessingStep } from "./enums";
 
 export interface ResumeData {
   profile: {
@@ -78,4 +78,23 @@ export interface ResumeHistoryEntry {
 export interface UploadedImage {
   url: string;
   path: string;
+}
+
+export interface ProcessedResumeImages {
+  imageUrls: string[];
+}
+
+export interface UseResumeProcessingReturn {
+  selectedFile: File | null;
+  currentStep: ProcessingStep;
+  isProcessing: boolean;
+
+  selectFile: (file: File) => void;
+  startProcessing: () => Promise<void>;
+  reset: () => void;
+
+  canStartProcessing: boolean;
+  hasFile: boolean;
+  isComplete: boolean;
+  isIdle: boolean;
 }

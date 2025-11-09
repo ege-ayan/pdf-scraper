@@ -7,7 +7,17 @@ export const metadata: Metadata = {
   description: "Manage your subscription and billing settings",
 };
 
-export default function SettingsPage() {
+interface SettingsPageProps {
+  searchParams: {
+    success?: string;
+    canceled?: string;
+  };
+}
+
+export default function SettingsPage({ searchParams }: SettingsPageProps) {
+  const success = searchParams.success;
+  const canceled = searchParams.canceled;
+
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto py-8">
@@ -19,7 +29,7 @@ export default function SettingsPage() {
         </div>
 
         <Suspense fallback={<div>Loading settings...</div>}>
-          <SubscriptionManager />
+          <SubscriptionManager success={success} canceled={canceled} />
         </Suspense>
       </div>
     </div>

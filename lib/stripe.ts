@@ -86,7 +86,6 @@ export async function createCheckoutSession(
 
 export async function createPortalSession(customerId: string) {
   try {
-    // Check if customer has active subscriptions before creating portal
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -217,7 +216,7 @@ export async function deductCredits(
     },
   });
 
-  return user.credits - amount; // Return remaining credits
+  return user.credits - amount;
 }
 
 export async function getUserCredits(userId: string) {

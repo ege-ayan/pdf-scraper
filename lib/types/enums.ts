@@ -26,8 +26,21 @@ export enum LanguageLevel {
   NATIVE = "NATIVE",
 }
 
+export enum ProcessingStep {
+  IDLE = "idle",
+  CONVERTING = "converting",
+  UPLOADING = "uploading",
+  READY = "ready",
+  SCRAPING = "scraping",
+  COMPLETE = "complete",
+}
+
 export enum PlanType {
   FREE = "FREE",
   BASIC = "BASIC",
   PRO = "PRO",
+}
+
+export enum ErrorType {
+  INSUFFICIENT_CREDITS = "INSUFFICIENT_CREDITS",
 }

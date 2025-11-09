@@ -6,9 +6,16 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
     const isAuthenticated = !!token;
+    const isIndexPage = pathname === "/";
 
     if (isAuthenticated && pathname.startsWith("/auth")) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL("/dashboard/home", req.url));
+    }
+    if (isAuthenticated && isIndexPage) {
+      return NextResponse.redirect(new URL("/dashboard/home", req.url));
+    }
+    if (!isAuthenticated && isIndexPage) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
     return NextResponse.next();

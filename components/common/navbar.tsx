@@ -47,7 +47,10 @@ export default function Navbar() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/dashboard/home"
+              className="flex items-center space-x-2"
+            >
               <FileText className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold">PDF Scraper</span>
             </Link>
@@ -55,7 +58,7 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center space-x-6">
             <Link
-              href="/dashboard"
+              href="/dashboard/home"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Upload

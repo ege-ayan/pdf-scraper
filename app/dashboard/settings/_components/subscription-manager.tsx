@@ -2,9 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CreditCard, Zap, Crown } from "lucide-react";
 import { toast } from "sonner";
@@ -15,34 +21,38 @@ interface UserCredits {
   planType: PlanType;
 }
 
-export default function SubscriptionManager() {
+interface SubscriptionManagerProps {
+  success?: string;
+  canceled?: string;
+}
+
+export default function SubscriptionManager({ success, canceled }: SubscriptionManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
-  // Handle success/cancel URLs
   useEffect(() => {
-    const success = searchParams.get("success");
-    const canceled = searchParams.get("canceled");
-
     if (success) {
-      // Show success message for subscription updates
       if (userCredits?.planType === PlanType.PRO) {
-        toast.success("🎉 Successfully upgraded to Pro! You now have enhanced features and 20,000 credits.", {
-          duration: 5000,
-        });
+        toast.success(
+          "🎉 Successfully upgraded to Pro! You now have enhanced features and 20,000 credits.",
+          {
+            duration: 5000,
+          }
+        );
       } else if (userCredits?.planType === PlanType.BASIC) {
-        toast.success("🎉 Successfully subscribed to Basic plan! You now have 10,000 credits.", {
-          duration: 5000,
-        });
+        toast.success(
+          "🎉 Successfully subscribed to Basic plan! You now have 10,000 credits.",
+          {
+            duration: 5000,
+          }
+        );
       } else {
         toast.success("Subscription updated successfully!");
       }
       fetchUserCredits();
-      // Remove the query param
       router.replace("/dashboard/settings");
     }
 
@@ -50,7 +60,7 @@ export default function SubscriptionManager() {
       toast.info("Subscription update canceled");
       router.replace("/dashboard/settings");
     }
-  }, [searchParams, router]);
+  }, [success, canceled, userCredits?.planType, router]);
 
   const fetchUserCredits = async () => {
     try {
@@ -92,7 +102,9 @@ export default function SubscriptionManager() {
       window.location.href = url; // Redirect to Stripe Checkout
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to start checkout");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to start checkout"
+      );
     } finally {
       setCheckoutLoading(null);
     }
@@ -107,9 +119,13 @@ export default function SubscriptionManager() {
       if (!response.ok) {
         const error = await response.json();
 
-        // Handle specific error cases
-        if (response.status === 400 && error.message?.includes("No active subscription")) {
-          toast.error("No active subscription found. Please subscribe to a plan first.");
+        if (
+          response.status === 400 &&
+          error.message?.includes("No active subscription")
+        ) {
+          toast.error(
+            "No active subscription found. Please subscribe to a plan first."
+          );
           return;
         }
 
@@ -117,7 +133,7 @@ export default function SubscriptionManager() {
       }
 
       const { url } = await response.json();
-      window.location.href = url; // Redirect to Stripe Customer Portal
+      window.location.href = url;
     } catch (error: any) {
       console.error("Portal error:", error);
       toast.error(error.message || "Failed to open billing portal");
@@ -140,7 +156,6 @@ export default function SubscriptionManager() {
 
   return (
     <div className="space-y-6">
-      {/* Current Plan & Credits */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -156,7 +171,9 @@ export default function SubscriptionManager() {
             <div>
               <p className="text-sm font-medium">Current Plan</p>
               <div className="flex items-center gap-2 mt-1">
-                {currentPlan === PlanType.FREE && <Badge variant="secondary">Free</Badge>}
+                {currentPlan === PlanType.FREE && (
+                  <Badge variant="secondary">Free</Badge>
+                )}
                 {currentPlan === PlanType.BASIC && (
                   <Badge variant="default" className="bg-blue-500">
                     <Zap className="h-3 w-3 mr-1" />
@@ -173,32 +190,38 @@ export default function SubscriptionManager() {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium">Available Credits</p>
-              <p className="text-2xl font-bold text-primary">{credits.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-primary">
+                {credits.toLocaleString()}
+              </p>
             </div>
           </div>
 
           <div className="text-sm text-muted-foreground">
             <p>• Each resume extraction costs 100 credits</p>
-            <p>• {credits < 100 ? "⚠️" : "✅"} You have enough credits for {(credits / 100).toFixed(0)} more extractions</p>
+            <p>
+              • {credits < 100 ? "⚠️" : "✅"} You have enough credits for{" "}
+              {(credits / 100).toFixed(0)} more extractions
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Subscription Plans */}
       {currentPlan === PlanType.FREE ? (
-        // Show both plans for FREE users
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Basic Plan */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-blue-500" />
                 Basic Plan
               </CardTitle>
-              <CardDescription>$10/month - Perfect for getting started</CardDescription>
+              <CardDescription>
+                $10/month - Perfect for getting started
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-2xl font-bold">$10<span className="text-sm font-normal">/month</span></div>
+              <div className="text-2xl font-bold">
+                $10<span className="text-sm font-normal">/month</span>
+              </div>
               <ul className="space-y-2 text-sm">
                 <li>✅ 10,000 credits per month</li>
                 <li>✅ 100 resume extractions</li>
@@ -222,7 +245,6 @@ export default function SubscriptionManager() {
             </CardContent>
           </Card>
 
-          {/* Pro Plan */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -232,7 +254,9 @@ export default function SubscriptionManager() {
               <CardDescription>$20/month - For power users</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-2xl font-bold">$20<span className="text-sm font-normal">/month</span></div>
+              <div className="text-2xl font-bold">
+                $20<span className="text-sm font-normal">/month</span>
+              </div>
               <ul className="space-y-2 text-sm">
                 <li>✅ 20,000 credits per month</li>
                 <li>✅ 200 resume extractions</li>
@@ -258,9 +282,7 @@ export default function SubscriptionManager() {
           </Card>
         </div>
       ) : currentPlan === PlanType.BASIC ? (
-        // Show Basic plan with upgrade option to Pro
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Current Basic Plan */}
           <Card className="ring-2 ring-blue-500">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -273,7 +295,9 @@ export default function SubscriptionManager() {
               <CardDescription>$10/month - Your current plan</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-2xl font-bold">$10<span className="text-sm font-normal">/month</span></div>
+              <div className="text-2xl font-bold">
+                $10<span className="text-sm font-normal">/month</span>
+              </div>
               <ul className="space-y-2 text-sm">
                 <li>✅ 10,000 credits per month</li>
                 <li>✅ 100 resume extractions</li>
@@ -286,19 +310,24 @@ export default function SubscriptionManager() {
             </CardContent>
           </Card>
 
-          {/* Pro Plan Upgrade */}
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
+          <Card className="border-purple-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-purple-500" />
                 Upgrade to Pro
               </CardTitle>
-              <CardDescription>$20/month - Unlock advanced features</CardDescription>
+              <CardDescription>
+                $20/month - Unlock advanced features
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-2xl font-bold text-purple-600">$20<span className="text-sm font-normal">/month</span></div>
+              <div className="text-2xl font-bold text-purple-600">
+                $20<span className="text-sm font-normal">/month</span>
+              </div>
               <div className="bg-purple-100 p-3 rounded-lg">
-                <p className="text-sm font-medium text-purple-800">Upgrade Benefits:</p>
+                <p className="text-sm font-medium text-purple-800">
+                  Upgrade Benefits:
+                </p>
                 <ul className="text-sm text-purple-700 mt-2 space-y-1">
                   <li>✅ +10,000 additional credits (20,000 total)</li>
                   <li>✅ +100 more resume extractions</li>
@@ -327,7 +356,6 @@ export default function SubscriptionManager() {
           </Card>
         </div>
       ) : (
-        // Show only Pro plan for PRO users
         <Card className="ring-2 ring-purple-500">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -340,7 +368,9 @@ export default function SubscriptionManager() {
             <CardDescription>$20/month - Your premium plan</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-2xl font-bold">$20<span className="text-sm font-normal">/month</span></div>
+            <div className="text-2xl font-bold">
+              $20<span className="text-sm font-normal">/month</span>
+            </div>
             <ul className="space-y-2 text-sm">
               <li>✅ 20,000 credits per month</li>
               <li>✅ 200 resume extractions</li>

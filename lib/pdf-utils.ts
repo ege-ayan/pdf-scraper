@@ -1,5 +1,14 @@
-import { type ResumeData, type UploadedImage } from "./types";
+import axios from "axios";
 import { uploadImagesToStorage } from "./supabase";
+import {
+  type ResumeData,
+  type UploadedImage,
+  type ProcessedResumeImages,
+  ProcessingStep,
+} from "./types";
+
+// Export max file size as a constant for single source of truth
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function pdfToImages(file: File): Promise<Blob[]> {
   const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
@@ -16,7 +25,7 @@ export async function pdfToImages(file: File): Promise<Blob[]> {
 
         const imageBlobs: Blob[] = [];
 
-        for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 5); pageNum++) {
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
 
           const canvas = document.createElement("canvas");
@@ -48,7 +57,7 @@ export async function pdfToImages(file: File): Promise<Blob[]> {
                 }
               },
               "image/jpeg",
-              0.8
+              1.0
             );
           });
 
@@ -73,22 +82,16 @@ export async function parseResumeWithAI(
   uploadedImages: UploadedImage[]
 ): Promise<ResumeData> {
   try {
-    const response = await fetch("/api/parse-resume", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ imageUrls: uploadedImages.map((img) => img.url) }),
+    const response = await axios.post("/api/parse-resume", {
+      imageUrls: uploadedImages.map((img) => img.url),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || error.message;
+      throw new Error(`Resume parsing failed: ${message}`);
+    }
     if (error instanceof Error) {
       throw new Error(`Resume parsing failed: ${error.message}`);
     }
@@ -96,38 +99,84 @@ export async function parseResumeWithAI(
   }
 }
 
-export interface ProcessedResumeImages {
-  imageUrls: string[];
-}
-
 export async function processResumePDF(
-  file: File
+  file: File,
+  onProgress?: (step: ProcessingStep) => void
 ): Promise<ProcessedResumeImages> {
-  const maxSize = 10 * 1024 * 1024;
-  if (file.size > maxSize) {
-    throw new Error("File size must be less than 10MB");
+  if (!file) {
+    throw new Error("No file provided");
   }
 
-  if (file.type !== "application/pdf") {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(
+      `File size ${file.size} bytes exceeds maximum allowed size of ${MAX_FILE_SIZE} bytes (10MB)`
+    );
+  }
+
+  if (file.size === 0) {
+    throw new Error("File is empty");
+  }
+
+  if (!file.type || file.type !== "application/pdf") {
     throw new Error("Only PDF files are allowed");
   }
 
-  console.log("Converting PDF to images...");
-  const imageBlobs = await pdfToImages(file);
+  try {
+    onProgress?.(ProcessingStep.CONVERTING);
+    console.log(
+      `Starting PDF processing for file: ${file.name} (${file.size} bytes)`
+    );
 
-  if (imageBlobs.length === 0) {
-    throw new Error("No pages found in PDF");
+    const imageBlobs = await pdfToImages(file);
+
+    if (!imageBlobs || imageBlobs.length === 0) {
+      throw new Error("PDF conversion failed: No pages found in PDF");
+    }
+
+    console.log(
+      `✅ Successfully converted PDF to ${imageBlobs.length} image blobs`
+    );
+
+    onProgress?.(ProcessingStep.UPLOADING);
+    console.log("Starting image upload process...");
+
+    const uploadedImages = await uploadImagesToStorage(imageBlobs);
+
+    if (!uploadedImages || uploadedImages.length === 0) {
+      throw new Error("Image upload failed: No images were uploaded");
+    }
+
+    if (uploadedImages.length !== imageBlobs.length) {
+      console.warn(
+        `Warning: Expected ${imageBlobs.length} uploads but got ${uploadedImages.length}`
+      );
+    }
+
+    console.log(
+      `✅ Successfully uploaded ${uploadedImages.length} images to storage`
+    );
+
+    onProgress?.(ProcessingStep.READY);
+    const imageUrls = uploadedImages.map((img) => img.url);
+
+    const invalidUrls = imageUrls.filter(
+      (url) => !url || typeof url !== "string"
+    );
+    if (invalidUrls.length > 0) {
+      throw new Error(
+        `Invalid image URLs generated: ${invalidUrls.length} invalid URLs`
+      );
+    }
+
+    console.log(
+      `✅ PDF processing completed successfully with ${imageUrls.length} image URLs`
+    );
+
+    return {
+      imageUrls,
+    };
+  } catch (error) {
+    console.error("❌ PDF processing failed:", error);
+    throw error;
   }
-
-  console.log(`Converted PDF to ${imageBlobs.length} image blobs`);
-
-  console.log("Uploading images to storage...");
-  const uploadedImages = await uploadImagesToStorage(imageBlobs);
-  console.log(`Uploaded ${uploadedImages.length} images to storage`);
-
-  const imageUrls = uploadedImages.map((img) => img.url);
-
-  return {
-    imageUrls,
-  };
 }

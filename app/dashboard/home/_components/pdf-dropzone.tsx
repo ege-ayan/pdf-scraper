@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MAX_FILE_SIZE } from "@/lib/pdf-utils";
 
 interface PdfDropzoneProps {
   onFileSelect: (file: File) => void;
@@ -32,7 +33,7 @@ export default function PdfDropzone({
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024,
+    maxSize: MAX_FILE_SIZE,
     disabled: isLoading,
   });
 

@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Portal session creation error:", error);
 
-    // Provide specific error messages
     if (error.message?.includes("No active subscriptions found")) {
       return NextResponse.json(
         {

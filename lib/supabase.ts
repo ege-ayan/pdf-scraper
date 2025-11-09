@@ -10,16 +10,9 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-  },
-});
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function uploadImageToStorage(
-  blob: Blob,
-  filename: string
-): Promise<UploadedImage> {
+export async function uploadImageToStorage(blob: Blob): Promise<UploadedImage> {
   try {
     const fileExt = "jpg";
     const fileName = `${Date.now()}-${Math.random()
@@ -27,7 +20,7 @@ export async function uploadImageToStorage(
       .substring(2)}.${fileExt}`;
     const filePath = `${folderName}/${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, blob, {
         contentType: "image/jpeg",
@@ -59,9 +52,7 @@ export async function uploadImageToStorage(
 export async function uploadImagesToStorage(
   blobs: Blob[]
 ): Promise<UploadedImage[]> {
-  const uploadPromises = blobs.map((blob, index) =>
-    uploadImageToStorage(blob, `page-${index + 1}`)
-  );
+  const uploadPromises = blobs.map((blob) => uploadImageToStorage(blob));
 
   try {
     const results = await Promise.all(uploadPromises);
