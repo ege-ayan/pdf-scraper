@@ -59,7 +59,6 @@ export async function createCheckoutSession(
     user.stripeCustomerId ||
     (await createOrRetrieveCustomer(userId, user.email));
 
-  // Check if user already has active subscriptions for upgrades
   const existingSubscriptions = await stripe.subscriptions.list({
     customer: customerId,
     status: "active",
@@ -70,79 +69,30 @@ export async function createCheckoutSession(
     `Found ${existingSubscriptions.data.length} active subscriptions for user ${userId}`
   );
 
-  // Handle upgrades by updating existing subscription
   if (existingSubscriptions.data.length > 0) {
     const existingSub = existingSubscriptions.data[0];
-    const existingPriceId = existingSub.items.data[0]?.price.id;
+    console.log(`Updating subscription ${existingSub.id} to ${priceId}`);
 
-    console.log(
-      `Existing subscription ${existingSub.id} has price ${existingPriceId}`
-    );
-
-    // Get current and new prices to show proration info
-    const currentPrice = await stripe.prices.retrieve(existingPriceId);
-    const newPrice = await stripe.prices.retrieve(priceId);
-
-    console.log(`Upgrading from $${currentPrice.unit_amount! / 100}/${currentPrice.recurring!.interval} to $${newPrice.unit_amount! / 100}/${newPrice.recurring!.interval}`);
-
-    // Update existing subscription to new price (can be different product)
-    console.log(`Updating subscription ${existingSub.id} to price ${priceId}`);
-
-    const updatedSubscription = await stripe.subscriptions.update(existingSub.id, {
-      items: [
-        {
-          id: existingSub.items.data[0].id,
-          price: priceId,
-        },
-      ],
+    await stripe.subscriptions.update(existingSub.id, {
+      items: [{ id: existingSub.items.data[0].id, price: priceId }],
       proration_behavior: "create_prorations",
     });
 
-    console.log(`✅ Subscription updated successfully`);
-
-    // Update credits directly for the upgrade based on the new plan
-    const user = await prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
-
+    const user = await prisma.user.findFirst({ where: { stripeCustomerId: customerId } });
     if (user) {
-      let creditsToAdd = 0;
-      let planType = PlanType.FREE;
+      const planType = priceId === STRIPE_PRICES.PRO ? PlanType.PRO : PlanType.BASIC;
+      const creditsToAdd = priceId === STRIPE_PRICES.PRO ? PLAN_CREDITS.PRO : PLAN_CREDITS.BASIC;
+      const newCredits = user.credits + creditsToAdd;
 
-      if (priceId === STRIPE_PRICES.BASIC) {
-        planType = PlanType.BASIC;
-        creditsToAdd = PLAN_CREDITS.BASIC;
-      } else if (priceId === STRIPE_PRICES.PRO) {
-        planType = PlanType.PRO;
-        creditsToAdd = PLAN_CREDITS.PRO;
-      }
-
-      if (creditsToAdd > 0 || user.planType !== planType) {
-        const newCredits = user.credits + creditsToAdd;
-        console.log(
-          `Upgrade credit update: plan ${user.planType} → ${planType}, credits ${user.credits} + ${creditsToAdd} = ${newCredits}`
-        );
-
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            planType,
-            credits: newCredits,
-          },
-        });
-
-        console.log(`✅ Upgrade credits updated: ${newCredits}`);
-      }
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { planType, credits: newCredits },
+      });
     }
 
-    // Return success response
-    return {
-      id: updatedSubscription.id,
-      url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
-    };
+    return { id: existingSub.id, url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true` };
   }
 
-  // No existing subscriptions, create new checkout session
   console.log(`Creating new checkout session for plan: ${planType}`);
 
   const session = await stripe.checkout.sessions.create({
@@ -225,7 +175,6 @@ export async function handleSubscriptionUpdate(
 
   if (priceId === STRIPE_PRICES.BASIC) {
     planType = PlanType.BASIC;
-    // Only add credits if this is a plan change (upgrade/downgrade), not for existing plans
     if (user.planType !== PlanType.BASIC) {
       creditsToAdd = PLAN_CREDITS.BASIC;
       console.log(`📈 Plan changed to BASIC - adding ${creditsToAdd} credits`);
@@ -234,7 +183,7 @@ export async function handleSubscriptionUpdate(
     }
   } else if (priceId === STRIPE_PRICES.PRO) {
     planType = PlanType.PRO;
-    // Only add credits if this is a plan change (upgrade/downgrade), not for existing plans
+
     if (user.planType !== PlanType.PRO) {
       creditsToAdd = PLAN_CREDITS.PRO;
       console.log(`📈 Plan changed to PRO - adding ${creditsToAdd} credits`);
@@ -278,21 +227,17 @@ export async function handleSubscriptionDelete(customerId: string) {
     return;
   }
 
-  console.log(
-    `🗑️ Deactivating subscription for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} (preserved - scraping frozen by subscription status)`
-  );
+  console.log(`🗑️ Subscription cancelled for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`);
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
       planType: PlanType.FREE,
-      // Keep existing credits - scraping will be frozen by lack of active subscription
+      credits: 0, // Reset credits to 0 on cancellation
     },
   });
 
-  console.log(
-    `✅ Deactivated subscription for user ${user.id}: FREE plan with ${user.credits} credits preserved (scraping frozen)`
-  );
+  console.log(`✅ Cancelled subscription for user ${user.id}: FREE plan with 0 credits`);
 }
 
 export async function deductCredits(
@@ -308,7 +253,6 @@ export async function deductCredits(
     throw new Error("User not found");
   }
 
-  // Check if user has an active subscription
   if (user.stripeCustomerId) {
     try {
       const subscriptions = await stripe.subscriptions.list({
@@ -330,7 +274,6 @@ export async function deductCredits(
         throw error;
       }
       console.error("Error checking subscription status:", error);
-      // If we can't check, allow the deduction (fail open)
     }
   }
 
