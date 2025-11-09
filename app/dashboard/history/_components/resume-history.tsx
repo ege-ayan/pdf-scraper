@@ -34,7 +34,7 @@ export default function ResumeHistory() {
 
   if (error) {
     return (
-      <Card className="max-w-md mx-auto">
+      <Card className=" mx-auto">
         <CardContent className="pt-6">
           <div className="text-center">
             <p className="text-destructive font-medium">
@@ -51,7 +51,7 @@ export default function ResumeHistory() {
 
   if (!history || history.length === 0) {
     return (
-      <Card className="max-w-md mx-auto">
+      <Card className=" mx-auto">
         <CardContent className="pt-6">
           <div className="text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -61,7 +61,7 @@ export default function ResumeHistory() {
               here.
             </p>
             <Button asChild>
-              <Link href="/dashboard">Upload Resume</Link>
+              <Link href="/dashboard/home">Upload Resume</Link>
             </Button>
           </div>
         </CardContent>

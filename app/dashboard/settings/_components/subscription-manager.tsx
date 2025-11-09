@@ -12,7 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Zap, Crown } from "lucide-react";
+import {
+  Loader2,
+  CreditCard,
+  Zap,
+  Crown,
+  CheckCircle,
+  ArrowUpCircle,
+  Settings,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PlanType } from "@/lib/types/enums";
 import { CREDITS_PER_SCRAPE } from "@/lib/constants";
@@ -27,7 +35,10 @@ interface SubscriptionManagerProps {
   canceled?: string;
 }
 
-export default function SubscriptionManager({ success, canceled }: SubscriptionManagerProps) {
+export default function SubscriptionManager({
+  success,
+  canceled,
+}: SubscriptionManagerProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
@@ -200,8 +211,9 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
           <div className="text-sm text-muted-foreground">
             <p>• Each resume extraction costs {CREDITS_PER_SCRAPE} credits</p>
             <p>
-              • {credits < CREDITS_PER_SCRAPE ? "⚠️" : "✅"} You have enough credits for{" "}
-              {(credits / CREDITS_PER_SCRAPE).toFixed(0)} more extractions
+              • {credits < CREDITS_PER_SCRAPE ? "⚠️" : "✅"} You have enough
+              credits for {(credits / CREDITS_PER_SCRAPE).toFixed(0)} more
+              extractions
             </p>
           </div>
         </CardContent>
@@ -224,10 +236,22 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
                 $10<span className="text-sm font-normal">/month</span>
               </div>
               <ul className="space-y-2 text-sm">
-                <li>✅ 10,000 credits per month</li>
-                <li>✅ {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions</li>
-                <li>✅ Priority support</li>
-                <li>✅ Cancel anytime</li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  10,000 credits per month
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Priority support
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Cancel anytime
+                </li>
               </ul>
               <Button
                 className="w-full"
@@ -283,59 +307,40 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
           </Card>
         </div>
       ) : currentPlan === PlanType.BASIC ? (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="ring-2 ring-blue-500">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-blue-500" />
-                  Basic Plan
-                </CardTitle>
-                <Badge>Current</Badge>
-              </div>
-              <CardDescription>$10/month - Your current plan</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-2xl font-bold">
-                $10<span className="text-sm font-normal">/month</span>
-              </div>
-              <ul className="space-y-2 text-sm">
-                <li>✅ 10,000 credits per month</li>
-                <li>✅ {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions</li>
-                <li>✅ Priority support</li>
-                <li>✅ Cancel anytime</li>
-              </ul>
-              <Button className="w-full" variant="outline" disabled>
-                Current Plan
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-purple-200">
-            <CardHeader>
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-purple-500" />
-                Upgrade to Pro
+                <Zap className="h-5 w-5 text-blue-500" />
+                Basic Plan
               </CardTitle>
-              <CardDescription>
-                $20/month - Unlock advanced features
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-2xl font-bold text-purple-600">
-                $20<span className="text-sm font-normal">/month</span>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <p className="text-sm font-medium text-purple-800">
-                  Upgrade Benefits:
-                </p>
-                <ul className="text-sm text-purple-700 mt-2 space-y-1">
-                  <li>✅ +10,000 additional credits (20,000 total)</li>
-                  <li>✅ +{(10000 / CREDITS_PER_SCRAPE).toFixed(0)} more resume extractions</li>
-                  <li>✅ Advanced AI features</li>
-                  <li>✅ Premium support</li>
-                </ul>
-              </div>
+              <Badge>Current</Badge>
+            </div>
+            <CardDescription>$10/month - Your current plan</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-2xl font-bold">
+              $10<span className="text-sm font-normal">/month</span>
+            </div>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                10,000 credits per month
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Priority support
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Cancel anytime
+              </li>
+            </ul>
+            <div className="space-y-2">
               <Button
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 disabled={checkoutLoading === PlanType.PRO}
@@ -348,16 +353,24 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
                   </>
                 ) : (
                   <>
-                    <Crown className="mr-2 h-4 w-4" />
+                    <ArrowUpCircle className="mr-2 h-4 w-4" />
                     Upgrade to Pro
                   </>
                 )}
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={handleManageBilling}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Manage Subscription
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        <Card className="ring-2 ring-purple-500">
+        <Card className="max-w-md mx-auto">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -373,36 +386,35 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
               $20<span className="text-sm font-normal">/month</span>
             </div>
             <ul className="space-y-2 text-sm">
-              <li>✅ 20,000 credits per month</li>
-              <li>✅ 200 resume extractions</li>
-              <li>✅ Priority support</li>
-              <li>✅ Advanced features</li>
-              <li>✅ Cancel anytime</li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                20,000 credits per month
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                {(20000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Premium support
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Advanced AI features
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                Cancel anytime
+              </li>
             </ul>
-            <Button className="w-full" variant="outline" disabled>
-              Current Plan
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={handleManageBilling}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Manage Subscription
             </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Billing Management */}
-      {(currentPlan === PlanType.BASIC || currentPlan === PlanType.PRO) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing Management</CardTitle>
-            <CardDescription>
-              Manage your subscription and billing details
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleManageBilling} variant="outline">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Manage Billing & Subscription
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2">
-              Update payment methods, view invoices, and cancel subscription
-            </p>
           </CardContent>
         </Card>
       )}

@@ -88,6 +88,12 @@ async function handleSubscriptionUpdated(
       return false;
     }
 
+    // Check if this subscription is being cancelled
+    if (subscription.cancel_at_period_end || subscription.canceled_at) {
+      console.log(`🚫 Subscription ${subscription.id} is being cancelled, skipping credit addition`);
+      return true; // Don't process cancelled subscriptions as updates
+    }
+
     await handleSubscriptionUpdate(subscription.customer, subscription);
 
     console.log(`✅ Subscription updated: ${subscription.id}`);

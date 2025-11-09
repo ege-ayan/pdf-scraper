@@ -59,6 +59,25 @@ export async function createCheckoutSession(
     user.stripeCustomerId ||
     (await createOrRetrieveCustomer(userId, user.email));
 
+  try {
+    const existingSubscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 10,
+    });
+
+    console.log(
+      `Found ${existingSubscriptions.data.length} active subscriptions for customer ${customerId}`
+    );
+
+    for (const subscription of existingSubscriptions.data) {
+      console.log(`Cancelling existing subscription: ${subscription.id}`);
+      await stripe.subscriptions.cancel(subscription.id);
+    }
+  } catch (error) {
+    console.error("Error cancelling existing subscriptions:", error);
+  }
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
@@ -140,12 +159,33 @@ export async function handleSubscriptionUpdate(
 
   if (priceId === STRIPE_PRICES.BASIC) {
     planType = PlanType.BASIC;
-    creditsToAdd = PLAN_CREDITS.BASIC;
-    console.log(`Detected BASIC plan - adding ${creditsToAdd} credits`);
+    // Only add credits if user is upgrading from FREE to BASIC
+    if (user.planType === PlanType.FREE) {
+      creditsToAdd = PLAN_CREDITS.BASIC;
+      console.log(
+        `Upgrading from FREE to BASIC - adding ${creditsToAdd} credits`
+      );
+    } else {
+      console.log(
+        `User already has ${user.planType} plan - not adding credits for BASIC`
+      );
+    }
   } else if (priceId === STRIPE_PRICES.PRO) {
     planType = PlanType.PRO;
-    creditsToAdd = PLAN_CREDITS.PRO;
-    console.log(`Detected PRO plan - adding ${creditsToAdd} credits`);
+    // Only add credits if user is upgrading from FREE to PRO, or BASIC to PRO
+    if (user.planType === PlanType.FREE) {
+      creditsToAdd = PLAN_CREDITS.PRO;
+      console.log(
+        `Upgrading from FREE to PRO - adding ${creditsToAdd} credits`
+      );
+    } else if (user.planType === PlanType.BASIC) {
+      creditsToAdd = PLAN_CREDITS.PRO - PLAN_CREDITS.BASIC; // Add the difference
+      console.log(
+        `Upgrading from BASIC to PRO - adding ${creditsToAdd} credits (difference)`
+      );
+    } else {
+      console.log(`User already has PRO plan - not adding additional credits`);
+    }
   } else {
     console.log(`Unknown price ID: ${priceId} - keeping FREE plan`);
   }
@@ -178,14 +218,21 @@ export async function handleSubscriptionDelete(customerId: string) {
     return;
   }
 
+  console.log(
+    `Downgrading user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`
+  );
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
       planType: PlanType.FREE,
+      credits: 0, // Reset credits to freeze scraping access
     },
   });
 
-  console.log(`Downgraded user ${user.id} to FREE plan`);
+  console.log(
+    `✅ Downgraded user ${user.id} to FREE plan with 0 credits (scraping frozen)`
+  );
 }
 
 export async function deductCredits(
