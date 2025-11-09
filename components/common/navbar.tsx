@@ -4,15 +4,13 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, FileText, ChevronDown, Menu, X } from "lucide-react";
+import { LogOut, FileText, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -21,12 +19,6 @@ export default function Navbar() {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownOpen(false);
-      }
-      if (
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsMobileMenuOpen(false);
       }
     };
 
@@ -39,7 +31,6 @@ export default function Navbar() {
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/login" });
     setIsDropdownOpen(false);
-    setIsMobileMenuOpen(false);
   };
 
   const getInitials = (name: string) => {
@@ -87,20 +78,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
-
             {status === "loading" ? (
               <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
             ) : session?.user ? (
@@ -143,6 +120,34 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div className="py-1">
+                      {/* Navigation links - only show on mobile */}
+                      <div className="md:hidden">
+                        <Link
+                          href="/dashboard/home"
+                          className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          Upload
+                        </Link>
+                        <Link
+                          href="/dashboard/history"
+                          className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          History
+                        </Link>
+                        <Link
+                          href="/dashboard/settings"
+                          className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                        <div className="border-t border-border my-1"></div>
+                      </div>
                       <button
                         onClick={handleSignOut}
                         className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
@@ -167,38 +172,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-
-      {/* Mobile Navigation Menu */}
-      {isMobileMenuOpen && (
-        <div
-          ref={mobileMenuRef}
-          className="md:hidden border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60"
-        >
-          <div className="px-4 py-3 space-y-1">
-            <Link
-              href="/dashboard/home"
-              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Upload
-            </Link>
-            <Link
-              href="/dashboard/history"
-              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              History
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Settings
-            </Link>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
