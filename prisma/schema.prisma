@@ -9,13 +9,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id             String    @id @default(cuid())
-  name           String
-  email          String    @unique
-  hashedPassword String
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+}
 
-  uploads        ResumeHistory[]
+model User {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  hashedPassword   String
+  credits          Int       @default(0)
+  planType         PlanType  @default(FREE)
+  stripeCustomerId String?   @unique
+
+  uploads          ResumeHistory[]
   @@map("users")
 }
 

@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
         </QueryProvider>
         <Toaster />
       </body>

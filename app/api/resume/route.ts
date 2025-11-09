@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseResumeWithOpenAI } from "@/lib/openai";
+import { deductCredits } from "@/lib/stripe";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -52,11 +53,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user has sufficient credits
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { credits: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    if (user.credits < 100) {
+      return NextResponse.json(
+        {
+          message: "Insufficient credits. Please upgrade your plan to continue.",
+          credits: user.credits,
+          required: 100
+        },
+        { status: 402 } // Payment Required
+      );
+    }
+
     let resumeData;
     if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
       console.log("Parsing resume with AI...");
       resumeData = await parseResumeWithOpenAI(imageUrls);
       console.log("Resume parsed successfully");
+
+      // Deduct credits after successful parsing
+      await deductCredits(session.user.id, 100);
+      console.log("Credits deducted successfully");
     } else {
       return NextResponse.json(
         { message: "imageUrls array is required for parsing" },

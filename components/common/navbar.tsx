@@ -66,6 +66,12 @@ export default function Navbar() {
             >
               History
             </Link>
+            <Link
+              href="/dashboard/settings"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Settings
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -126,6 +132,14 @@ export default function Navbar() {
                       >
                         <FileText className="mr-2 h-4 w-4" />
                         Resume History
+                      </Link>
+                      <Link
+                        href="/dashboard/settings"
+                        className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Settings
                       </Link>
                       <div className="border-t border-border my-1"></div>
                       <button

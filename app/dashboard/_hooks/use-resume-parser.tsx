@@ -29,6 +29,19 @@ export function useResumeParser() {
 
         if (!saveResponse.ok) {
           const errorData = await saveResponse.json();
+
+          if (saveResponse.status === 402) {
+            // Insufficient credits - show upgrade prompt
+            toast.error(`Insufficient credits! You have ${errorData.credits} credits but need ${errorData.required}. Please upgrade your plan.`, {
+              action: {
+                label: "Upgrade",
+                onClick: () => window.location.href = "/dashboard/settings",
+              },
+              duration: 8000,
+            });
+            return;
+          }
+
           throw new Error(errorData.message || "Failed to save resume");
         }
 

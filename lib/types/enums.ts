@@ -25,3 +25,9 @@ export enum LanguageLevel {
   ADVANCED = "ADVANCED",
   NATIVE = "NATIVE",
 }
+
+export enum PlanType {
+  FREE = "FREE",
+  BASIC = "BASIC",
+  PRO = "PRO",
+}
