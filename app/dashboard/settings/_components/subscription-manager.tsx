@@ -211,9 +211,11 @@ export default function SubscriptionManager({
           <div className="text-sm text-muted-foreground">
             <p>• Each resume extraction costs {CREDITS_PER_SCRAPE} credits</p>
             <p>
-              • {credits < CREDITS_PER_SCRAPE ? "⚠️" : "✅"} You have enough
-              credits for {(credits / CREDITS_PER_SCRAPE).toFixed(0)} more
-              extractions
+              • You have enough credits for{" "}
+              <span className="font-bold">
+                {(credits / CREDITS_PER_SCRAPE).toFixed(0)}
+              </span>{" "}
+              more extractions
             </p>
           </div>
         </CardContent>
@@ -221,7 +223,7 @@ export default function SubscriptionManager({
 
       {currentPlan === PlanType.FREE ? (
         <div className="grid md:grid-cols-2 gap-6">
-          <Card>
+          <Card className="flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-blue-500" />
@@ -231,18 +233,21 @@ export default function SubscriptionManager({
                 $10/month - Perfect for getting started
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col flex-1 space-y-4">
               <div className="text-2xl font-bold">
                 $10<span className="text-sm font-normal">/month</span>
               </div>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-sm flex-1">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   10,000 credits per month
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+                  <span className="font-bold">
+                    {(10000 / CREDITS_PER_SCRAPE).toFixed(0)}
+                  </span>{" "}
+                  resume extractions
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -253,24 +258,26 @@ export default function SubscriptionManager({
                   Cancel anytime
                 </li>
               </ul>
-              <Button
-                className="w-full"
-                disabled={checkoutLoading === PlanType.BASIC}
-                onClick={() => handleSubscribe(PlanType.BASIC)}
-              >
-                {checkoutLoading === PlanType.BASIC ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Subscribe to Basic"
-                )}
-              </Button>
+              <div className="mt-auto">
+                <Button
+                  className="w-full"
+                  disabled={checkoutLoading === PlanType.BASIC}
+                  onClick={() => handleSubscribe(PlanType.BASIC)}
+                >
+                  {checkoutLoading === PlanType.BASIC ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Subscribe to Basic"
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-purple-500" />
@@ -278,31 +285,51 @@ export default function SubscriptionManager({
               </CardTitle>
               <CardDescription>$20/month - For power users</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col flex-1 space-y-4">
               <div className="text-2xl font-bold">
                 $20<span className="text-sm font-normal">/month</span>
               </div>
-              <ul className="space-y-2 text-sm">
-                <li>✅ 20,000 credits per month</li>
-                <li>✅ 200 resume extractions</li>
-                <li>✅ Priority support</li>
-                <li>✅ Advanced features</li>
-                <li>✅ Cancel anytime</li>
+              <ul className="space-y-2 text-sm flex-1">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  20,000 credits per month
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-bold">
+                    {(20000 / CREDITS_PER_SCRAPE).toFixed(0)}
+                  </span>{" "}
+                  resume extractions
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Priority support
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Advanced features
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Cancel anytime
+                </li>
               </ul>
-              <Button
-                className="w-full"
-                disabled={checkoutLoading === PlanType.PRO}
-                onClick={() => handleSubscribe(PlanType.PRO)}
-              >
-                {checkoutLoading === PlanType.PRO ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Subscribe to Pro"
-                )}
-              </Button>
+              <div className="mt-auto">
+                <Button
+                  className="w-full"
+                  disabled={checkoutLoading === PlanType.PRO}
+                  onClick={() => handleSubscribe(PlanType.PRO)}
+                >
+                  {checkoutLoading === PlanType.PRO ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Subscribe to Pro"
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -329,7 +356,10 @@ export default function SubscriptionManager({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+                <span className="font-bold">
+                  {(10000 / CREDITS_PER_SCRAPE).toFixed(0)}
+                </span>{" "}
+                resume extractions
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -392,7 +422,10 @@ export default function SubscriptionManager({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                {(20000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
+                <span className="font-bold">
+                  {(20000 / CREDITS_PER_SCRAPE).toFixed(0)}
+                </span>{" "}
+                resume extractions
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
