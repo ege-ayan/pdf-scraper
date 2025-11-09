@@ -4,9 +4,10 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserCredits } from "./use-user-credits";
 import { processResumePDF } from "@/lib/pdf-utils";
+import { cleanupImages } from "@/lib/supabase";
 import { ProcessingStep, ErrorType } from "@/lib/types/enums";
 import { UseResumeProcessingReturn } from "@/lib/types";
 import { CREDITS_PER_SCRAPE, MAX_FILE_SIZE } from "@/lib/constants";
@@ -91,10 +92,12 @@ function useResumeScraper() {
 
 export function useResumeProcessing(): UseResumeProcessingReturn {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentStep, setCurrentStep] = useState<ProcessingStep>(
     ProcessingStep.IDLE
   );
+  const [processedResumeData, setProcessedResumeData] = useState<any>(null);
 
   const resumeParser = useResumeParser((step) => setCurrentStep(step));
   const resumeScraper = useResumeScraper();
@@ -166,12 +169,29 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
       const processedImages = await resumeParser.mutateAsync(selectedFile);
 
       setCurrentStep(ProcessingStep.SCRAPING);
-      await resumeScraper.mutateAsync({
+      const scrapedResume = await resumeScraper.mutateAsync({
         fileName: selectedFile.name,
         imageUrls: processedImages.imageUrls,
       });
 
+      // Store the processed resume data for display
+      setProcessedResumeData(scrapedResume);
+
+      // Clean up uploaded images from Supabase after successful processing
+      try {
+        console.log("🧹 Cleaning up uploaded images:", processedImages.imagePaths);
+        await cleanupImages(processedImages.imagePaths);
+        console.log("✅ Successfully cleaned up images");
+      } catch (cleanupError) {
+        console.warn("⚠️ Failed to cleanup images, but processing was successful:", cleanupError);
+        // Don't fail the entire process if cleanup fails
+      }
+
       setCurrentStep(ProcessingStep.COMPLETE);
+
+      // Invalidate resume history cache to show the new resume
+      queryClient.invalidateQueries({ queryKey: ["resume-history"] });
+      console.log("✅ Invalidated resume history cache");
     } catch (error) {
       setCurrentStep(ProcessingStep.IDLE);
       throw error;
@@ -182,17 +202,20 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
     validateCredits,
     resumeParser,
     resumeScraper,
+    queryClient,
   ]);
 
   const reset = useCallback(() => {
     setSelectedFile(null);
     setCurrentStep(ProcessingStep.IDLE);
+    setProcessedResumeData(null);
   }, []);
 
   return {
     selectedFile,
     currentStep,
     isProcessing,
+    processedResumeData,
 
     selectFile,
     startProcessing,

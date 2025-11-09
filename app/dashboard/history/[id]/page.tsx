@@ -7,8 +7,9 @@ interface ResumeDetailPageProps {
   }>;
 }
 
-// Simplified metadata - data fetching handled by client component
-export async function generateMetadata({ params }: ResumeDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ResumeDetailPageProps): Promise<Metadata> {
   const { id } = await params;
 
   return {
@@ -17,12 +18,14 @@ export async function generateMetadata({ params }: ResumeDetailPageProps): Promi
   };
 }
 
-export default async function ResumeDetailPage({ params }: ResumeDetailPageProps) {
+export default async function ResumeDetailPage({
+  params,
+}: ResumeDetailPageProps) {
   const { id } = await params;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-4xl mx-auto py-8">
+    <div className="min-h-screen  p-4">
+      <div className="max-w-6xl mx-auto py-8">
         <ResumeDetail resumeId={id} />
       </div>
     </div>

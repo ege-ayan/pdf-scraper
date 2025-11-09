@@ -82,12 +82,14 @@ export interface UploadedImage {
 
 export interface ProcessedResumeImages {
   imageUrls: string[];
+  imagePaths: string[];
 }
 
 export interface UseResumeProcessingReturn {
   selectedFile: File | null;
   currentStep: ProcessingStep;
   isProcessing: boolean;
+  processedResumeData: any;
 
   selectFile: (file: File) => void;
   startProcessing: () => Promise<void>;

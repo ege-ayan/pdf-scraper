@@ -156,22 +156,35 @@ export async function processResumePDF(
 
     onProgress?.(ProcessingStep.READY);
     const imageUrls = uploadedImages.map((img) => img.url);
+    const imagePaths = uploadedImages.map((img) => img.path);
 
+    // Validate all URLs and paths are present
     const invalidUrls = imageUrls.filter(
       (url) => !url || typeof url !== "string"
     );
+    const invalidPaths = imagePaths.filter(
+      (path) => !path || typeof path !== "string"
+    );
+
     if (invalidUrls.length > 0) {
       throw new Error(
         `Invalid image URLs generated: ${invalidUrls.length} invalid URLs`
       );
     }
 
+    if (invalidPaths.length > 0) {
+      throw new Error(
+        `Invalid image paths generated: ${invalidPaths.length} invalid paths`
+      );
+    }
+
     console.log(
-      `✅ PDF processing completed successfully with ${imageUrls.length} image URLs`
+      `✅ PDF processing completed successfully with ${imageUrls.length} image URLs and ${imagePaths.length} paths`
     );
 
     return {
       imageUrls,
+      imagePaths,
     };
   } catch (error) {
     console.error("❌ PDF processing failed:", error);
