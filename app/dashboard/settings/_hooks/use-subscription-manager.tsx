@@ -53,28 +53,49 @@ export function useSubscriptionManager({
 
   useEffect(() => {
     if (success) {
-      if (userCredits?.planType === PlanType.PRO) {
-        toast.success(
-          "🎉 Successfully upgraded to Pro! You now have enhanced features and 20,000 credits.",
-          { duration: 5000 }
-        );
-      } else if (userCredits?.planType === PlanType.BASIC) {
-        toast.success(
-          "🎉 Successfully subscribed to Basic plan! You now have 10,000 credits.",
-          { duration: 5000 }
-        );
-      } else {
-        toast.success("Subscription updated successfully!");
-      }
-      refreshCredits();
-      router.replace("/dashboard/settings");
+      // Add a small delay to ensure webhook has processed
+      const handleSuccess = async () => {
+        try {
+          // Wait for webhook processing
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Fetch fresh credits data
+          const response = await axios.get("/api/user/credits");
+          const freshCredits = response.data;
+
+          // Show success message based on fresh credits data
+          if (freshCredits?.planType === PlanType.PRO) {
+            toast.success(
+              `🎉 Successfully upgraded to Pro! You now have ${freshCredits.credits.toLocaleString()} credits.`,
+              { duration: 5000 }
+            );
+          } else if (freshCredits?.planType === PlanType.BASIC) {
+            toast.success(
+              `🎉 Successfully subscribed to Basic plan! You now have ${freshCredits.credits.toLocaleString()} credits.`,
+              { duration: 5000 }
+            );
+          } else {
+            toast.success("Subscription updated successfully!");
+          }
+
+          // Update local state with fresh data
+          setUserCredits(freshCredits);
+        } catch (error) {
+          console.error("Failed to refresh credits after subscription:", error);
+          toast.success("Subscription processed! Credits will update shortly.");
+        }
+
+        router.replace("/dashboard/settings");
+      };
+
+      handleSuccess();
     }
 
     if (canceled) {
       toast.info("Subscription update canceled");
       router.replace("/dashboard/settings");
     }
-  }, [success, canceled, userCredits?.planType, router, refreshCredits]);
+  }, [success, canceled, router]);
 
   useEffect(() => {
     fetchUserCredits();
