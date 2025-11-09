@@ -4,20 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, MapPin, Globe, ExternalLink } from "lucide-react";
 import { ResumeData } from "@/types";
+import { formatUrl } from "@/lib/utils";
 
 interface ProfileSectionProps {
   profile: ResumeData["profile"];
 }
 
 export default function ProfileSection({ profile }: ProfileSectionProps) {
-  // Helper function to ensure URL has protocol
-  const formatUrl = (url: string) => {
-    if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return url;
-    }
-    return `https://${url}`;
-  };
   return (
     <Card>
       <CardHeader>

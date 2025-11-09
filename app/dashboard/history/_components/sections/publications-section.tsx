@@ -3,21 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Calendar, ExternalLink } from "lucide-react";
 import { ResumeData } from "@/types";
+import { formatUrl } from "@/lib/utils";
 
 interface PublicationsSectionProps {
   publications: ResumeData["publications"];
 }
 
 export default function PublicationsSection({ publications }: PublicationsSectionProps) {
-  // Helper function to ensure URL has protocol
-  const formatUrl = (url: string) => {
-    if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return url;
-    }
-    return `https://${url}`;
-  };
-
   if (publications.length === 0) return null;
 
   return (
