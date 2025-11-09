@@ -176,10 +176,11 @@ export async function handleSubscriptionUpdate(
     }
   } else if (priceId === STRIPE_PRICES.PRO) {
     planType = PlanType.PRO;
-    creditsToAdd = PLAN_CREDITS.PRO; // Always add 20k credits when subscribing to PRO
+    // Force add 20k credits regardless of current balance - simple and reliable
+    creditsToAdd = PLAN_CREDITS.PRO;
 
     console.log(
-      `User subscribing to PRO - adding ${creditsToAdd} credits to existing ${user.credits} balance`
+      `User subscribing to PRO - adding ${creditsToAdd} credits (total will be ${user.credits + creditsToAdd})`
     );
   } else {
     console.log(`Unknown price ID: ${priceId} - keeping FREE plan`);
@@ -221,7 +222,7 @@ export async function handleSubscriptionDelete(customerId: string) {
     where: { id: user.id },
     data: {
       planType: PlanType.FREE,
-      // Keep existing credits so they can be used if user upgrades immediately
+      credits: user.credits, // Explicitly preserve existing credits
     },
   });
 
