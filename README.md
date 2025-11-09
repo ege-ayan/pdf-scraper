@@ -80,7 +80,7 @@ OPENAI_API_KEY="your-openai-api-key-here"
 
 # Supabase (required for image storage)
 NEXT_PUBLIC_SUPABASE_URL="your-supabase-project-url"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+NEXT_PUBLIC_SUPABAS_PUBLISHABLE_KEY="your-supabase-anon-key"
 
 # Stripe (optional - for subscription features)
 STRIPE_SECRET_KEY="sk_test_..."
@@ -117,15 +117,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 The app includes an optional credit-based system powered by Stripe:
 
 ### Credit System
+
 - **Free users**: Start with 0 credits
 - **Resume extraction**: Costs 100 credits per PDF
 - **Insufficient credits**: Shows upgrade prompt with link to settings
 
 ### Subscription Plans
+
 - **Basic Plan**: $10/month - 10,000 credits (100 extractions)
 - **Pro Plan**: $20/month - 20,000 credits (200 extractions)
 
 ### Features
+
 - **Settings Page**: `/dashboard/settings` - Manage subscriptions
 - **Upgrade Flow**: Seamless checkout via Stripe
 - **Billing Portal**: Manage payments and subscriptions
@@ -133,6 +136,7 @@ The app includes an optional credit-based system powered by Stripe:
 - **Webhook Integration**: Automatic credit top-ups on renewal
 
 ### Stripe Setup
+
 1. Create products in Stripe Dashboard
 2. Configure webhook endpoint: `/api/webhooks/stripe`
 3. Set webhook events: `invoice.payment_succeeded`, `customer.subscription.updated`, `customer.subscription.deleted`
