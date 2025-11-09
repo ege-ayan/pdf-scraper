@@ -127,66 +127,56 @@ async function handleSubscriptionDeleted(
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<boolean> {
-  try {
-    console.log(
-      `💰 Processing invoice payment - activating subscription and adding credits: ${invoice.id}`
-    );
+  console.log(`💰 Processing invoice payment - activating subscription and adding credits: ${invoice.id}`);
 
-    if (!invoice.customer || typeof invoice.customer !== "string") {
-      console.error("❌ Invalid customer ID in invoice.paid");
-      return false;
-    }
-
-    let subscriptionId: string | null = null;
-
-    const invoiceSubscription = (invoice as any).subscription;
-    if (invoiceSubscription) {
-      subscriptionId =
-        typeof invoiceSubscription === "string"
-          ? invoiceSubscription
-          : invoiceSubscription.id;
-      console.log(`📄 Found subscription in invoice: ${subscriptionId}`);
-    } else {
-      console.log(
-        `🔍 No subscription in invoice, searching for active subscription...`
-      );
-      try {
-        const subscriptions = await stripe.subscriptions.list({
-          customer: invoice.customer,
-          status: "active",
-          limit: 1,
-        });
-
-        if (subscriptions.data.length > 0) {
-          subscriptionId = subscriptions.data[0].id;
-          console.log(`✅ Found active subscription: ${subscriptionId}`);
-        } else {
-          console.log(
-            `⚠️ No active subscriptions found for customer, might be setup fee`
-          );
-          return true;
-        }
-      } catch (error) {
-        console.error(`❌ Error searching for subscription:`, error);
-        return false;
-      }
-    }
-
-    if (!subscriptionId) {
-      console.log(`⏭️ No subscription found for invoice: ${invoice.id}`);
-      return true;
-    }
-
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-    await handleSubscriptionUpdate(invoice.customer, subscription);
-
-    console.log(
-      `✅ Subscription activated and credits added: ${invoice.id} for subscription: ${subscriptionId}`
-    );
-    return true;
-  } catch (error) {
-    console.error(`❌ Failed to process invoice payment: ${invoice.id}`, error);
+  if (!invoice.customer || typeof invoice.customer !== "string") {
+    console.error("❌ Invalid customer ID in invoice.paid");
     return false;
   }
+
+  // Find the subscription from the invoice
+  let subscriptionId: string | null = null;
+
+  const invoiceSubscription = (invoice as any).subscription;
+  if (invoiceSubscription) {
+    subscriptionId = typeof invoiceSubscription === "string"
+      ? invoiceSubscription
+      : invoiceSubscription.id;
+  }
+
+  if (!subscriptionId) {
+    console.log(`🔍 No subscription reference in invoice, searching for active subscriptions...`);
+
+    // For upgrades, the invoice might not have a direct subscription reference
+    // Look for the most recent active subscription for this customer
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: invoice.customer,
+        status: "active",
+        limit: 5,
+      });
+
+      if (subscriptions.data.length > 0) {
+        // Use the most recent subscription (first in the list, sorted by created date desc)
+        subscriptionId = subscriptions.data[0].id;
+        console.log(`✅ Found active subscription: ${subscriptionId}`);
+      } else {
+        console.log(`⚠️ No active subscriptions found for customer`);
+        return true;
+      }
+    } catch (error) {
+      console.error(`❌ Error searching for subscriptions:`, error);
+      return false;
+    }
+  }
+
+  console.log(`📋 Processing subscription ${subscriptionId} for invoice ${invoice.id}`);
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  console.log(`📄 Subscription status: ${subscription.status}, plan: ${subscription.items.data[0]?.price.id}`);
+
+  await handleSubscriptionUpdate(invoice.customer, subscription);
+
+  console.log(`✅ Subscription activated and credits added: ${invoice.id}`);
+  return true;
 }

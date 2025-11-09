@@ -199,19 +199,19 @@ export async function handleSubscriptionDelete(customerId: string) {
   }
 
   console.log(
-    `🗑️ Deactivating subscription for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0 (freeze scraping)`
+    `🗑️ Deactivating subscription for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} (preserved - scraping frozen by subscription status)`
   );
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
       planType: PlanType.FREE,
-      credits: 0, // Freeze scraping by setting credits to 0
+      // Keep existing credits - scraping will be frozen by lack of active subscription
     },
   });
 
   console.log(
-    `✅ Deactivated subscription for user ${user.id}: FREE plan with 0 credits (scraping frozen)`
+    `✅ Deactivated subscription for user ${user.id}: FREE plan with ${user.credits} credits preserved (scraping frozen)`
   );
 }
 
@@ -221,11 +221,32 @@ export async function deductCredits(
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { credits: true },
+    select: { credits: true, stripeCustomerId: true },
   });
 
   if (!user) {
     throw new Error("User not found");
+  }
+
+  // Check if user has an active subscription
+  if (user.stripeCustomerId) {
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: "active",
+        limit: 1,
+      });
+
+      if (subscriptions.data.length === 0) {
+        throw new Error("No active subscription found. Please renew your subscription to continue using the service.");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("active subscription")) {
+        throw error;
+      }
+      console.error("Error checking subscription status:", error);
+      // If we can't check, allow the deduction (fail open)
+    }
   }
 
   if (user.credits < amount) {
