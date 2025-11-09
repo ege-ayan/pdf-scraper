@@ -78,10 +78,14 @@ export async function createCheckoutSession(
       proration_behavior: "create_prorations",
     });
 
-    const user = await prisma.user.findFirst({ where: { stripeCustomerId: customerId } });
+    const user = await prisma.user.findFirst({
+      where: { stripeCustomerId: customerId },
+    });
     if (user) {
-      const planType = priceId === STRIPE_PRICES.PRO ? PlanType.PRO : PlanType.BASIC;
-      const creditsToAdd = priceId === STRIPE_PRICES.PRO ? PLAN_CREDITS.PRO : PLAN_CREDITS.BASIC;
+      const planType =
+        priceId === STRIPE_PRICES.PRO ? PlanType.PRO : PlanType.BASIC;
+      const creditsToAdd =
+        priceId === STRIPE_PRICES.PRO ? PLAN_CREDITS.PRO : PLAN_CREDITS.BASIC;
       const newCredits = user.credits + creditsToAdd;
 
       await prisma.user.update({
@@ -90,7 +94,10 @@ export async function createCheckoutSession(
       });
     }
 
-    return { id: existingSub.id, url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true` };
+    return {
+      id: existingSub.id,
+      url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
+    };
   }
 
   console.log(`Creating new checkout session for plan: ${planType}`);
@@ -227,7 +234,9 @@ export async function handleSubscriptionDelete(customerId: string) {
     return;
   }
 
-  console.log(`🗑️ Subscription cancelled for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`);
+  console.log(
+    `🗑️ Subscription cancelled for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`
+  );
 
   await prisma.user.update({
     where: { id: user.id },
@@ -237,7 +246,9 @@ export async function handleSubscriptionDelete(customerId: string) {
     },
   });
 
-  console.log(`✅ Cancelled subscription for user ${user.id}: FREE plan with 0 credits`);
+  console.log(
+    `✅ Cancelled subscription for user ${user.id}: FREE plan with 0 credits`
+  );
 }
 
 export async function deductCredits(
