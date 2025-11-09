@@ -244,10 +244,7 @@ export default function SubscriptionManager({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="font-bold">
-                    {(10000 / CREDITS_PER_SCRAPE).toFixed(0)}
-                  </span>{" "}
-                  resume extractions
+                  {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -296,10 +293,7 @@ export default function SubscriptionManager({
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="font-bold">
-                    {(20000 / CREDITS_PER_SCRAPE).toFixed(0)}
-                  </span>{" "}
-                  resume extractions
+                  {(20000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -356,10 +350,7 @@ export default function SubscriptionManager({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="font-bold">
-                  {(10000 / CREDITS_PER_SCRAPE).toFixed(0)}
-                </span>{" "}
-                resume extractions
+                {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -422,10 +413,7 @@ export default function SubscriptionManager({
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="font-bold">
-                  {(20000 / CREDITS_PER_SCRAPE).toFixed(0)}
-                </span>{" "}
-                resume extractions
+                {(20000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
