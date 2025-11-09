@@ -2,10 +2,7 @@
 
 import { PlanType } from "@/types";
 import { useSubscriptionManager } from "../_hooks/use-subscription-manager";
-import { CurrentPlanCard } from "./current-plan-card";
-import { PlanSelectionCards } from "./plan-selection-cards";
-import { BasicPlanCard } from "./basic-plan-card";
-import { ProPlanCard } from "./pro-plan-card";
+import { PlanCards } from "./plan-cards";
 import { SubscriptionLoading } from "./subscription-loading";
 
 interface SubscriptionManagerProps {
@@ -33,23 +30,12 @@ export default function SubscriptionManager({
   const credits = userCredits?.credits || 0;
 
   return (
-    <div className="space-y-6">
-      <CurrentPlanCard credits={credits} planType={currentPlan} />
-
-      {currentPlan === PlanType.FREE ? (
-        <PlanSelectionCards
-          checkoutLoading={checkoutLoading}
-          onSubscribe={handleSubscribe}
-        />
-      ) : currentPlan === PlanType.BASIC ? (
-        <BasicPlanCard
-          checkoutLoading={checkoutLoading}
-          onSubscribe={handleSubscribe}
-          onManageBilling={handleManageBilling}
-        />
-      ) : (
-        <ProPlanCard onManageBilling={handleManageBilling} />
-      )}
-    </div>
+    <PlanCards
+      currentPlan={currentPlan}
+      credits={credits}
+      checkoutLoading={checkoutLoading}
+      onSubscribe={handleSubscribe}
+      onManageBilling={handleManageBilling}
+    />
   );
 }
