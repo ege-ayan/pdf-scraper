@@ -79,10 +79,16 @@ export async function createCheckoutSession(
       `Existing subscription ${existingSub.id} has price ${existingPriceId}`
     );
 
+    // Get current and new prices to show proration info
+    const currentPrice = await stripe.prices.retrieve(existingPriceId);
+    const newPrice = await stripe.prices.retrieve(priceId);
+
+    console.log(`Upgrading from $${currentPrice.unit_amount! / 100}/${currentPrice.recurring!.interval} to $${newPrice.unit_amount! / 100}/${newPrice.recurring!.interval}`);
+
     // Update existing subscription to new price (can be different product)
     console.log(`Updating subscription ${existingSub.id} to price ${priceId}`);
 
-    await stripe.subscriptions.update(existingSub.id, {
+    const updatedSubscription = await stripe.subscriptions.update(existingSub.id, {
       items: [
         {
           id: existingSub.items.data[0].id,
@@ -131,7 +137,7 @@ export async function createCheckoutSession(
 
     // Return success response
     return {
-      id: existingSub.id,
+      id: updatedSubscription.id,
       url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
     };
   }
