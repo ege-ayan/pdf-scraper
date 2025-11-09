@@ -44,16 +44,13 @@ export function useDeleteResume() {
   const queryClient = useQueryClient();
 
   const deleteResume = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resume? This action cannot be undone.")) {
-      return;
-    }
-
     try {
       await axios.delete(`/api/resume/${id}`);
       queryClient.invalidateQueries({ queryKey: ["resume-history"] });
       toast.success("Resume deleted successfully");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to delete resume");
+      throw error; // Re-throw so the UI can handle it
     }
   };
 
