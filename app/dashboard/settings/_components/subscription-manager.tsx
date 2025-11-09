@@ -14,8 +14,13 @@ interface SubscriptionManagerProps {
   canceled?: string;
 }
 
-// Component for displaying current plan and credits
-function CurrentPlanDisplay({ currentPlan, credits }: { currentPlan: PlanType; credits: number }) {
+function CurrentPlanDisplay({
+  currentPlan,
+  credits,
+}: {
+  currentPlan: PlanType;
+  credits: number;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -69,7 +74,6 @@ function CurrentPlanDisplay({ currentPlan, credits }: { currentPlan: PlanType; c
   );
 }
 
-// Loading component
 function SubscriptionLoading() {
   return (
     <Card>

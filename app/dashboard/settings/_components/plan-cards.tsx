@@ -289,7 +289,10 @@ export function PlanCards({
       )}
 
       {/* Upgrade Confirmation Modal */}
-      <Dialog open={confirmUpgrade?.open} onOpenChange={(open) => setConfirmUpgrade(open ? confirmUpgrade : null)}>
+      <Dialog
+        open={confirmUpgrade?.open}
+        onOpenChange={(open) => setConfirmUpgrade(open ? confirmUpgrade : null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Plan Upgrade</DialogTitle>
@@ -302,7 +305,9 @@ export function PlanCards({
                     <div className="p-4 bg-muted rounded-lg">
                       <div className="flex justify-between items-center">
                         <span>Credits included:</span>
-                        <span className="font-bold text-primary">{PLAN_CREDITS.PRO.toLocaleString()}</span>
+                        <span className="font-bold text-primary">
+                          {PLAN_CREDITS.PRO.toLocaleString()}
+                        </span>
                       </div>
                     </div>
                     <p>You'll be charged $20/month starting today.</p>
@@ -313,7 +318,9 @@ export function PlanCards({
                     <div className="p-4 bg-muted rounded-lg">
                       <div className="flex justify-between items-center">
                         <span>Credits included:</span>
-                        <span className="font-bold text-primary">{PLAN_CREDITS.BASIC.toLocaleString()}</span>
+                        <span className="font-bold text-primary">
+                          {PLAN_CREDITS.BASIC.toLocaleString()}
+                        </span>
                       </div>
                     </div>
                     <p>You'll be charged $10/month starting today.</p>
@@ -326,18 +333,27 @@ export function PlanCards({
                   <div className="p-4 bg-muted rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                       <span>Current credits:</span>
-                      <span className="font-semibold">{credits.toLocaleString()}</span>
+                      <span className="font-semibold">
+                        {credits.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
                       <span>+ Pro plan credits:</span>
-                      <span className="font-semibold text-green-600">+{PLAN_CREDITS.PRO.toLocaleString()}</span>
+                      <span className="font-semibold text-green-600">
+                        +{PLAN_CREDITS.PRO.toLocaleString()}
+                      </span>
                     </div>
                     <div className="border-t pt-2 flex justify-between items-center">
                       <span className="font-semibold">New total:</span>
-                      <span className="font-bold text-primary">{(credits + PLAN_CREDITS.PRO).toLocaleString()}</span>
+                      <span className="font-bold text-primary">
+                        {(credits + PLAN_CREDITS.PRO).toLocaleString()}
+                      </span>
                     </div>
                   </div>
-                  <p>Your subscription will be updated immediately and you'll be charged the prorated difference.</p>
+                  <p>
+                    Your subscription will be updated immediately and you'll be
+                    charged the prorated difference.
+                  </p>
                 </>
               )}
             </div>

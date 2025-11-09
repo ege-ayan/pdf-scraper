@@ -146,31 +146,31 @@ export default function Navbar() {
                     <div className="py-1">
                       {/* Navigation links - only show on mobile */}
                       <div className="md:hidden">
-                        <Link
-                          href="/dashboard/home"
+                      <Link
+                        href="/dashboard/home"
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload
-                        </Link>
-                        <Link
-                          href="/dashboard/history"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload
+                      </Link>
+                      <Link
+                        href="/dashboard/history"
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
                           <Clock className="mr-2 h-4 w-4" />
-                          History
-                        </Link>
-                        <Link
-                          href="/dashboard/settings"
+                        History
+                      </Link>
+                      <Link
+                        href="/dashboard/settings"
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
-                        </Link>
-                        <div className="border-t border-border my-1"></div>
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                      <div className="border-t border-border my-1"></div>
                       </div>
                       <button
                         onClick={handleSignOut}

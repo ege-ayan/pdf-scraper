@@ -7,10 +7,34 @@ import axios from "axios";
 import { toast } from "sonner";
 import { PlanType } from "@/types";
 
-// Hook for managing user credits state
-export function useUserCredits() {
+export interface UserCredits {
+  credits: number;
+  planType: PlanType;
+}
+
+export interface SubscriptionManagerProps {
+  success?: string;
+  canceled?: string;
+}
+
+export interface UseSubscriptionManagerReturn {
+  userCredits: UserCredits | null;
+  loading: boolean;
+  checkoutLoading: string | null;
+  handleSubscribe: (planType: PlanType.BASIC | PlanType.PRO) => Promise<void>;
+  handleManageBilling: () => Promise<void>;
+  refreshCredits: () => Promise<void>;
+}
+
+export function useSubscriptionManager({
+  success,
+  canceled,
+}: SubscriptionManagerProps): UseSubscriptionManagerReturn {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const fetchUserCredits = async () => {
     try {
@@ -28,22 +52,49 @@ export function useUserCredits() {
   const refreshCredits = fetchUserCredits;
 
   useEffect(() => {
+    if (success) {
+      const handleSuccess = async () => {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          const response = await axios.get("/api/user/credits");
+          const freshCredits = response.data;
+
+          if (freshCredits?.planType === PlanType.PRO) {
+            toast.success(
+              `🎉 Successfully upgraded to Pro! You now have ${freshCredits.credits.toLocaleString()} credits.`,
+              { duration: 5000 }
+            );
+          } else if (freshCredits?.planType === PlanType.BASIC) {
+            toast.success(
+              `🎉 Successfully subscribed to Basic plan! You now have ${freshCredits.credits.toLocaleString()} credits.`,
+              { duration: 5000 }
+            );
+          } else {
+            toast.success("Subscription updated successfully!");
+          }
+
+          setUserCredits(freshCredits);
+        } catch (error) {
+          console.error("Failed to refresh credits after subscription:", error);
+          toast.success("Subscription processed! Credits will update shortly.");
+        }
+
+        router.replace("/dashboard/settings");
+      };
+
+      handleSuccess();
+    }
+
+    if (canceled) {
+      toast.info("Subscription update canceled");
+      router.replace("/dashboard/settings");
+    }
+  }, [success, canceled, router]);
+
+  useEffect(() => {
     fetchUserCredits();
   }, []);
-
-  return {
-    userCredits,
-    loading,
-    refreshCredits,
-    setUserCredits,
-  };
-}
-
-// Hook for handling subscription actions
-export function useSubscriptionActions() {
-  const { data: session } = useSession();
-  const router = useRouter();
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const handleSubscribe = async (planType: PlanType.BASIC | PlanType.PRO) => {
     if (!session?.user?.id) {
@@ -102,100 +153,6 @@ export function useSubscriptionActions() {
       }
     }
   };
-
-  return {
-    checkoutLoading,
-    handleSubscribe,
-    handleManageBilling,
-  };
-}
-
-// Hook for handling subscription success/cancel states
-export function useSubscriptionSuccess({
-  success,
-  canceled,
-  onCreditsUpdate,
-}: {
-  success?: string;
-  canceled?: string;
-  onCreditsUpdate: (credits: UserCredits) => void;
-}) {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (success) {
-      const handleSuccess = async () => {
-        try {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-
-          const response = await axios.get("/api/user/credits");
-          const freshCredits = response.data;
-
-          if (freshCredits?.planType === PlanType.PRO) {
-            toast.success(
-              `🎉 Successfully upgraded to Pro! You now have ${freshCredits.credits.toLocaleString()} credits.`,
-              { duration: 5000 }
-            );
-          } else if (freshCredits?.planType === PlanType.BASIC) {
-            toast.success(
-              `🎉 Successfully subscribed to Basic plan! You now have ${freshCredits.credits.toLocaleString()} credits.`,
-              { duration: 5000 }
-            );
-          } else {
-            toast.success("Subscription updated successfully!");
-          }
-
-          onCreditsUpdate(freshCredits);
-        } catch (error) {
-          console.error("Failed to refresh credits after subscription:", error);
-          toast.success("Subscription processed! Credits will update shortly.");
-        }
-
-        router.replace("/dashboard/settings");
-      };
-
-      handleSuccess();
-    }
-
-    if (canceled) {
-      toast.info("Subscription update canceled");
-      router.replace("/dashboard/settings");
-    }
-  }, [success, canceled, router, onCreditsUpdate]);
-}
-
-export interface UserCredits {
-  credits: number;
-  planType: PlanType;
-}
-
-export interface SubscriptionManagerProps {
-  success?: string;
-  canceled?: string;
-}
-
-export interface UseSubscriptionManagerReturn {
-  userCredits: UserCredits | null;
-  loading: boolean;
-  checkoutLoading: string | null;
-  handleSubscribe: (planType: PlanType.BASIC | PlanType.PRO) => Promise<void>;
-  handleManageBilling: () => Promise<void>;
-  refreshCredits: () => Promise<void>;
-}
-
-export function useSubscriptionManager({
-  success,
-  canceled,
-}: SubscriptionManagerProps): UseSubscriptionManagerReturn {
-  const { userCredits, loading, refreshCredits, setUserCredits } = useUserCredits();
-  const { checkoutLoading, handleSubscribe, handleManageBilling } = useSubscriptionActions();
-
-  // Handle success/cancel states
-  useSubscriptionSuccess({
-    success,
-    canceled,
-    onCreditsUpdate: setUserCredits,
-  });
 
   return {
     userCredits,

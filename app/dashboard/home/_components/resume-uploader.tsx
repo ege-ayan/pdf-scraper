@@ -167,7 +167,7 @@ export default function ResumeUploader() {
                   return (
                     <div className="bg-white rounded-lg border p-6 space-y-6">
                       <h4 className="font-semibold text-lg mb-4">
-                        📄 Extracted Resume Data
+                        <FileText className="h-4 w-4" /> Extracted Resume Data
                       </h4>
 
                       {/* Profile Section */}
