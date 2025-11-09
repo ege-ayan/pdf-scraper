@@ -6,7 +6,6 @@ const openai = new OpenAI({
 });
 
 export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
-  // Input validation
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OpenAI API key not configured in environment variables");
   }
@@ -25,7 +24,6 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
     `🤖 Starting AI resume parsing for ${imageUrls.length} images...`
   );
 
-  // Validate image URLs accessibility
   const validationPromises = imageUrls.map(async (url, index) => {
     if (!url || typeof url !== "string") {
       throw new Error(`Invalid URL at index ${index}: ${url}`);
@@ -34,7 +32,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
     try {
       const response = await fetch(url, {
         method: "HEAD",
-        signal: AbortSignal.timeout(5000), // 5 second timeout
+        signal: AbortSignal.timeout(5000),
       });
 
       if (!response.ok) {
@@ -125,7 +123,6 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       throw new Error("OpenAI response is not valid JSON");
     }
 
-    // Basic validation of the parsed data structure
     if (!structuredData || typeof structuredData !== "object") {
       throw new Error("OpenAI response does not contain valid structured data");
     }
@@ -134,7 +131,6 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
     return structuredData;
   } catch (error) {
     if (error instanceof Error) {
-      // Handle OpenAI-specific errors
       if (error.message.includes("insufficient_quota")) {
         throw new Error(
           "OpenAI API quota exceeded. Please check your billing."

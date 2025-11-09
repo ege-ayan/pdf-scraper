@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import PdfDropzone from "./pdf-dropzone";
 import { useResumeProcessing } from "../_hooks/use-resume-processing";
 import { ProcessingStep } from "@/lib/types/enums";
+import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 import { Loader2, CheckCircle } from "lucide-react";
 
 export default function ResumeUploader() {
@@ -99,7 +100,7 @@ export default function ResumeUploader() {
                     Processing...
                   </>
                 ) : (
-                  "Start Processing (100 credits)"
+                  `Start Processing (${CREDITS_PER_SCRAPE} credits)`
                 )}
               </Button>
             </div>

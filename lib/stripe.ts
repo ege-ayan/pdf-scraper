@@ -1,24 +1,20 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
 import { PlanType } from "./types/enums";
+import {
+  CREDITS_PER_SCRAPE,
+  STRIPE_PRICES,
+  PLAN_CREDITS,
+  CHECKOUT_SUCCESS_URL,
+  CHECKOUT_CANCEL_URL,
+  SETTINGS_URL,
+} from "./constants";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is required");
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export const STRIPE_PRICES = {
-  BASIC: process.env.STRIPE_PRICE_BASIC!,
-  PRO: process.env.STRIPE_PRICE_PRO!,
-} as const;
-
-export const PLAN_CREDITS = {
-  BASIC: 10000,
-  PRO: 20000,
-} as const;
-
-export const CREDITS_PER_SCRAPE = 100;
 
 export async function createOrRetrieveCustomer(userId: string, email: string) {
   const user = await prisma.user.findUnique({
@@ -73,8 +69,8 @@ export async function createCheckoutSession(
       },
     ],
     mode: "subscription",
-    success_url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
-    cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/settings?canceled=true`,
+    success_url: CHECKOUT_SUCCESS_URL,
+    cancel_url: CHECKOUT_CANCEL_URL,
     metadata: {
       userId,
       planType,
@@ -98,7 +94,7 @@ export async function createPortalSession(customerId: string) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.NEXTAUTH_URL}/dashboard/settings`,
+      return_url: SETTINGS_URL,
     });
 
     return session;

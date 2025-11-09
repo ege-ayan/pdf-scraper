@@ -6,9 +6,7 @@ import {
   type ProcessedResumeImages,
   ProcessingStep,
 } from "./types";
-
-// Export max file size as a constant for single source of truth
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+import { MAX_FILE_SIZE } from "./constants";
 
 export async function pdfToImages(file: File): Promise<Blob[]> {
   const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");

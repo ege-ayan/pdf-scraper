@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CreditCard, Zap, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { PlanType } from "@/lib/types/enums";
+import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 
 interface UserCredits {
   credits: number;
@@ -197,10 +198,10 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
           </div>
 
           <div className="text-sm text-muted-foreground">
-            <p>• Each resume extraction costs 100 credits</p>
+            <p>• Each resume extraction costs {CREDITS_PER_SCRAPE} credits</p>
             <p>
-              • {credits < 100 ? "⚠️" : "✅"} You have enough credits for{" "}
-              {(credits / 100).toFixed(0)} more extractions
+              • {credits < CREDITS_PER_SCRAPE ? "⚠️" : "✅"} You have enough credits for{" "}
+              {(credits / CREDITS_PER_SCRAPE).toFixed(0)} more extractions
             </p>
           </div>
         </CardContent>
@@ -224,7 +225,7 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
               </div>
               <ul className="space-y-2 text-sm">
                 <li>✅ 10,000 credits per month</li>
-                <li>✅ 100 resume extractions</li>
+                <li>✅ {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions</li>
                 <li>✅ Priority support</li>
                 <li>✅ Cancel anytime</li>
               </ul>
@@ -300,7 +301,7 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
               </div>
               <ul className="space-y-2 text-sm">
                 <li>✅ 10,000 credits per month</li>
-                <li>✅ 100 resume extractions</li>
+                <li>✅ {(10000 / CREDITS_PER_SCRAPE).toFixed(0)} resume extractions</li>
                 <li>✅ Priority support</li>
                 <li>✅ Cancel anytime</li>
               </ul>
@@ -330,7 +331,7 @@ export default function SubscriptionManager({ success, canceled }: SubscriptionM
                 </p>
                 <ul className="text-sm text-purple-700 mt-2 space-y-1">
                   <li>✅ +10,000 additional credits (20,000 total)</li>
-                  <li>✅ +100 more resume extractions</li>
+                  <li>✅ +{(10000 / CREDITS_PER_SCRAPE).toFixed(0)} more resume extractions</li>
                   <li>✅ Advanced AI features</li>
                   <li>✅ Premium support</li>
                 </ul>

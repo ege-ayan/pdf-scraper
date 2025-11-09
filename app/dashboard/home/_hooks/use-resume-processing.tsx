@@ -139,7 +139,7 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
       return false;
     }
 
-    if (userCredits.credits < 100) {
+    if (userCredits.credits < CREDITS_PER_SCRAPE) {
       toast.error(`Insufficient credits! Please upgrade your plan.`, {
         action: {
           label: "Upgrade",
@@ -163,10 +163,8 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
     }
 
     try {
-      // Step 1: Parse PDF and get image URLs
       const processedImages = await resumeParser.mutateAsync(selectedFile);
 
-      // Step 2: Send to AI for scraping
       setCurrentStep(ProcessingStep.SCRAPING);
       await resumeScraper.mutateAsync({
         fileName: selectedFile.name,
@@ -178,7 +176,13 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
       setCurrentStep(ProcessingStep.IDLE);
       throw error;
     }
-  }, [selectedFile, canStartProcessing, validateCredits, resumeParser, resumeScraper]);
+  }, [
+    selectedFile,
+    canStartProcessing,
+    validateCredits,
+    resumeParser,
+    resumeScraper,
+  ]);
 
   const reset = useCallback(() => {
     setSelectedFile(null);

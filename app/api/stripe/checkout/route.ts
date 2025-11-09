@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createCheckoutSession, STRIPE_PRICES } from "@/lib/stripe";
+import { createCheckoutSession } from "@/lib/stripe";
+import { STRIPE_PRICES } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
