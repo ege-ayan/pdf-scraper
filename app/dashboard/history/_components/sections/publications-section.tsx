@@ -9,6 +9,15 @@ interface PublicationsSectionProps {
 }
 
 export default function PublicationsSection({ publications }: PublicationsSectionProps) {
+  // Helper function to ensure URL has protocol
+  const formatUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return `https://${url}`;
+  };
+
   if (publications.length === 0) return null;
 
   return (
@@ -34,7 +43,7 @@ export default function PublicationsSection({ publications }: PublicationsSectio
                 </p>
                 {pub.publicationUrl && (
                   <a
-                    href={pub.publicationUrl}
+                    href={formatUrl(pub.publicationUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center gap-1 mt-1"
