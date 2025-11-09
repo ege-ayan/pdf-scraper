@@ -7,34 +7,10 @@ import axios from "axios";
 import { toast } from "sonner";
 import { PlanType } from "@/types";
 
-export interface UserCredits {
-  credits: number;
-  planType: PlanType;
-}
-
-export interface SubscriptionManagerProps {
-  success?: string;
-  canceled?: string;
-}
-
-export interface UseSubscriptionManagerReturn {
-  userCredits: UserCredits | null;
-  loading: boolean;
-  checkoutLoading: string | null;
-  handleSubscribe: (planType: PlanType.BASIC | PlanType.PRO) => Promise<void>;
-  handleManageBilling: () => Promise<void>;
-  refreshCredits: () => Promise<void>;
-}
-
-export function useSubscriptionManager({
-  success,
-  canceled,
-}: SubscriptionManagerProps): UseSubscriptionManagerReturn {
-  const { data: session } = useSession();
-  const router = useRouter();
+// Hook for managing user credits state
+export function useUserCredits() {
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const fetchUserCredits = async () => {
     try {
@@ -50,6 +26,101 @@ export function useSubscriptionManager({
   };
 
   const refreshCredits = fetchUserCredits;
+
+  useEffect(() => {
+    fetchUserCredits();
+  }, []);
+
+  return {
+    userCredits,
+    loading,
+    refreshCredits,
+    setUserCredits,
+  };
+}
+
+// Hook for handling subscription actions
+export function useSubscriptionActions() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleSubscribe = async (planType: PlanType.BASIC | PlanType.PRO) => {
+    if (!session?.user?.id) {
+      toast.error("You must be logged in to subscribe");
+      return;
+    }
+
+    setCheckoutLoading(planType);
+    try {
+      const response = await axios.post("/api/stripe/checkout", {
+        planType,
+      });
+
+      const { url } = response.data;
+      router.push(url);
+    } catch (error) {
+      console.error("Checkout error:", error);
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        toast.error(errorMessage || "Failed to start checkout");
+      } else {
+        toast.error("Failed to start checkout");
+      }
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      const response = await axios.post("/api/stripe/portal");
+
+      const { url } = response.data;
+      router.push(url);
+    } catch (error: any) {
+      console.error("Portal error:", error);
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const errorMessage = error.response?.data?.message;
+
+        if (
+          status === 400 &&
+          errorMessage?.includes("No active subscription")
+        ) {
+          toast.error(
+            "No active subscription found. Please subscribe to a plan first."
+          );
+          return;
+        }
+
+        toast.error(errorMessage || "Failed to open billing portal");
+      } else {
+        toast.error(error.message || "Failed to open billing portal");
+      }
+    }
+  };
+
+  return {
+    checkoutLoading,
+    handleSubscribe,
+    handleManageBilling,
+  };
+}
+
+// Hook for handling subscription success/cancel states
+export function useSubscriptionSuccess({
+  success,
+  canceled,
+  onCreditsUpdate,
+}: {
+  success?: string;
+  canceled?: string;
+  onCreditsUpdate: (credits: UserCredits) => void;
+}) {
+  const router = useRouter();
 
   useEffect(() => {
     if (success) {
@@ -74,7 +145,7 @@ export function useSubscriptionManager({
             toast.success("Subscription updated successfully!");
           }
 
-          setUserCredits(freshCredits);
+          onCreditsUpdate(freshCredits);
         } catch (error) {
           console.error("Failed to refresh credits after subscription:", error);
           toast.success("Subscription processed! Credits will update shortly.");
@@ -90,69 +161,41 @@ export function useSubscriptionManager({
       toast.info("Subscription update canceled");
       router.replace("/dashboard/settings");
     }
-  }, [success, canceled, router]);
+  }, [success, canceled, router, onCreditsUpdate]);
+}
 
-  useEffect(() => {
-    fetchUserCredits();
-  }, []);
+export interface UserCredits {
+  credits: number;
+  planType: PlanType;
+}
 
-  const handleSubscribe = async (planType: PlanType.BASIC | PlanType.PRO) => {
-    if (!session?.user?.id) {
-      toast.error("You must be logged in to subscribe");
-      return;
-    }
+export interface SubscriptionManagerProps {
+  success?: string;
+  canceled?: string;
+}
 
-    setCheckoutLoading(planType);
-    try {
-      const response = await axios.post("/api/stripe/checkout", {
-        planType,
-      });
+export interface UseSubscriptionManagerReturn {
+  userCredits: UserCredits | null;
+  loading: boolean;
+  checkoutLoading: string | null;
+  handleSubscribe: (planType: PlanType.BASIC | PlanType.PRO) => Promise<void>;
+  handleManageBilling: () => Promise<void>;
+  refreshCredits: () => Promise<void>;
+}
 
-      const { url } = response.data;
-      window.location.href = url;
-    } catch (error) {
-      console.error("Checkout error:", error);
+export function useSubscriptionManager({
+  success,
+  canceled,
+}: SubscriptionManagerProps): UseSubscriptionManagerReturn {
+  const { userCredits, loading, refreshCredits, setUserCredits } = useUserCredits();
+  const { checkoutLoading, handleSubscribe, handleManageBilling } = useSubscriptionActions();
 
-      if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || error.message;
-        toast.error(errorMessage || "Failed to start checkout");
-      } else {
-        toast.error("Failed to start checkout");
-      }
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  const handleManageBilling = async () => {
-    try {
-      const response = await axios.post("/api/stripe/portal");
-
-      const { url } = response.data;
-      window.location.href = url;
-    } catch (error: any) {
-      console.error("Portal error:", error);
-
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        const errorMessage = error.response?.data?.message;
-
-        if (
-          status === 400 &&
-          errorMessage?.includes("No active subscription")
-        ) {
-          toast.error(
-            "No active subscription found. Please subscribe to a plan first."
-          );
-          return;
-        }
-
-        toast.error(errorMessage || "Failed to open billing portal");
-      } else {
-        toast.error(error.message || "Failed to open billing portal");
-      }
-    }
-  };
+  // Handle success/cancel states
+  useSubscriptionSuccess({
+    success,
+    canceled,
+    onCreditsUpdate: setUserCredits,
+  });
 
   return {
     userCredits,
