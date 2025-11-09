@@ -70,7 +70,7 @@ export default function Navbar() {
               href="/dashboard/home"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                 isActivePath("/dashboard/home")
-                  ? "text-foreground"
+                  ? "text-foreground underline underline-offset-4"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -81,7 +81,7 @@ export default function Navbar() {
               href="/dashboard/history"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                 isActivePath("/dashboard/history")
-                  ? "text-foreground"
+                  ? "text-foreground underline underline-offset-4"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -92,7 +92,7 @@ export default function Navbar() {
               href="/dashboard/settings"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                 isActivePath("/dashboard/settings")
-                  ? "text-foreground"
+                  ? "text-foreground underline underline-offset-4"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
