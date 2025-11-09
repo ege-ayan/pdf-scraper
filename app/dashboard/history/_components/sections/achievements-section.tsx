@@ -8,7 +8,9 @@ interface AchievementsSectionProps {
   achievements: ResumeData["achievements"];
 }
 
-export default function AchievementsSection({ achievements }: AchievementsSectionProps) {
+export default function AchievementsSection({
+  achievements,
+}: AchievementsSectionProps) {
   if (achievements.length === 0) return null;
 
   return (
