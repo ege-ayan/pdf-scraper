@@ -38,7 +38,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <a
-                  href={profile.website}
+                  href={profile.website as string}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center gap-1"
@@ -52,7 +52,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <a
-                  href={profile.linkedIn}
+                  href={profile.linkedIn as string}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center gap-1"
@@ -76,9 +76,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
         </div>
         <div>
           <h4 className="font-medium mb-2">Professional Summary</h4>
-          <p className="text-muted-foreground">
-            {profile.professionalSummary}
-          </p>
+          <p className="text-muted-foreground">{profile.professionalSummary}</p>
         </div>
       </CardContent>
     </Card>
