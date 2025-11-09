@@ -4,7 +4,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, FileText, ChevronDown } from "lucide-react";
+import { LogOut, FileText, Upload, Clock, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function Navbar() {
@@ -127,7 +127,7 @@ export default function Navbar() {
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <FileText className="mr-2 h-4 w-4" />
+                          <Upload className="mr-2 h-4 w-4" />
                           Upload
                         </Link>
                         <Link
@@ -135,7 +135,7 @@ export default function Navbar() {
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <FileText className="mr-2 h-4 w-4" />
+                          <Clock className="mr-2 h-4 w-4" />
                           History
                         </Link>
                         <Link
@@ -143,7 +143,7 @@ export default function Navbar() {
                           className="flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <FileText className="mr-2 h-4 w-4" />
+                          <Settings className="mr-2 h-4 w-4" />
                           Settings
                         </Link>
                         <div className="border-t border-border my-1"></div>
