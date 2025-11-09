@@ -14,7 +14,8 @@ import {
   Settings,
   Home,
   Menu,
-  X
+  X,
+  User,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
@@ -40,6 +41,20 @@ export default function Navbar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Close mobile menu on escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/login" });
@@ -106,17 +121,18 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-muted"
             >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              <div className="flex flex-col space-y-1">
+                <div className={`h-0.5 w-4 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+                <div className={`h-0.5 w-4 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></div>
+                <div className={`h-0.5 w-4 bg-current transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+              </div>
             </Button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          {/* Desktop Avatar - Hidden on mobile */}
+          <div className="hidden md:flex items-center space-x-4">
             {status === "loading" ? (
               <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
             ) : session?.user ? (
@@ -187,27 +203,112 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Overlay Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-          <div className="px-4 py-3 space-y-1">
-            {navigationItems.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActiveLink(href)
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{label}</span>
-              </Link>
-            ))}
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Menu */}
+          <div className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-background border-r border-border shadow-xl z-50 md:hidden transform transition-transform duration-300 ease-in-out">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <Link
+                  href="/dashboard/home"
+                  className="flex items-center space-x-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <FileText className="h-6 w-6 text-primary" />
+                  <span className="text-xl font-bold">PDF Scraper</span>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* User Info Section */}
+              {session?.user && (
+                <div className="p-4 border-b border-border bg-muted/30">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                        {getInitials(session.user.name || session.user.email || "U")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">
+                        {session.user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Items */}
+              <div className="flex-1 px-4 py-6">
+                <div className="space-y-2">
+                  {navigationItems.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center space-x-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isActiveLink(href)
+                          ? "bg-primary/10 text-primary font-semibold shadow-sm"
+                          : "text-foreground hover:bg-muted hover:shadow-sm"
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sign Out */}
+              {session?.user && (
+                <div className="p-4 border-t border-border">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center w-full px-3 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors"
+                  >
+                    <LogOut className="mr-3 h-5 w-5" />
+                    Sign out
+                  </button>
+                </div>
+              )}
+
+              {/* Auth Links for Non-logged-in Users */}
+              {!session?.user && (
+                <div className="p-4 border-t border-border space-y-2">
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="mr-3 h-5 w-5" />
+                      Sign in
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full justify-start">
+                    <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                      Sign up
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );
