@@ -179,9 +179,9 @@ export async function handleSubscriptionUpdate(
         `Upgrading from FREE to PRO - adding ${creditsToAdd} credits`
       );
     } else if (user.planType === PlanType.BASIC) {
-      creditsToAdd = PLAN_CREDITS.PRO - PLAN_CREDITS.BASIC; // Add the difference
+      creditsToAdd = PLAN_CREDITS.PRO; // Add full PRO credits (not difference)
       console.log(
-        `Upgrading from BASIC to PRO - adding ${creditsToAdd} credits (difference)`
+        `Upgrading from BASIC to PRO - adding ${creditsToAdd} credits`
       );
     } else {
       console.log(`User already has PRO plan - not adding additional credits`);
