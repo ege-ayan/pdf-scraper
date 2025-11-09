@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +11,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   CheckCircle,
   Loader2,
   ArrowUpCircle,
@@ -19,7 +28,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { PlanType } from "@/types";
-import { CREDITS_PER_SCRAPE } from "@/lib/constants";
+import { CREDITS_PER_SCRAPE, PLAN_CREDITS } from "@/lib/constants";
 
 interface PlanCardsProps {
   currentPlan: PlanType;
@@ -36,6 +45,22 @@ export function PlanCards({
   onSubscribe,
   onManageBilling,
 }: PlanCardsProps) {
+  const [confirmUpgrade, setConfirmUpgrade] = useState<{
+    planType: PlanType.BASIC | PlanType.PRO;
+    open: boolean;
+  } | null>(null);
+
+  const handleUpgradeClick = (planType: PlanType.BASIC | PlanType.PRO) => {
+    setConfirmUpgrade({ planType, open: true });
+  };
+
+  const handleConfirmUpgrade = async () => {
+    if (confirmUpgrade) {
+      await onSubscribe(confirmUpgrade.planType);
+      setConfirmUpgrade(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Current Plan & Credits Card */}
@@ -132,7 +157,7 @@ export function PlanCards({
                 <Button
                   className="w-full"
                   disabled={checkoutLoading === PlanType.BASIC}
-                  onClick={() => onSubscribe(PlanType.BASIC)}
+                  onClick={() => handleUpgradeClick(PlanType.BASIC)}
                 >
                   {checkoutLoading === PlanType.BASIC ? (
                     <>
@@ -186,7 +211,7 @@ export function PlanCards({
                 <Button
                   className="w-full"
                   disabled={checkoutLoading === PlanType.PRO}
-                  onClick={() => onSubscribe(PlanType.PRO)}
+                  onClick={() => handleUpgradeClick(PlanType.PRO)}
                 >
                   {checkoutLoading === PlanType.PRO ? (
                     <>
@@ -202,7 +227,7 @@ export function PlanCards({
           </Card>
         </div>
       ) : currentPlan === PlanType.BASIC ? (
-        <Card className="max-w-md mx-auto">
+        <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -239,7 +264,7 @@ export function PlanCards({
               <Button
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 disabled={checkoutLoading === PlanType.PRO}
-                onClick={() => onSubscribe(PlanType.PRO)}
+                onClick={() => handleUpgradeClick(PlanType.PRO)}
               >
                 {checkoutLoading === PlanType.PRO ? (
                   <>
@@ -265,7 +290,7 @@ export function PlanCards({
           </CardContent>
         </Card>
       ) : (
-        <Card className="max-w-md mx-auto">
+        <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -313,6 +338,93 @@ export function PlanCards({
           </CardContent>
         </Card>
       )}
+
+      {/* Upgrade Confirmation Modal */}
+      <Dialog open={confirmUpgrade?.open} onOpenChange={(open) => setConfirmUpgrade(open ? confirmUpgrade : null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Plan Upgrade</DialogTitle>
+            <DialogDescription>
+              {currentPlan === PlanType.FREE ? (
+                // FREE to BASIC/PRO subscription
+                confirmUpgrade?.planType === PlanType.PRO ? (
+                  <>
+                    <p>You're about to subscribe to the Pro plan.</p>
+                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span>Credits included:</span>
+                        <span className="font-bold text-primary">{PLAN_CREDITS.PRO.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      You'll be charged $20/month starting today.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>You're about to subscribe to the Basic plan.</p>
+                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span>Credits included:</span>
+                        <span className="font-bold text-primary">{PLAN_CREDITS.BASIC.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      You'll be charged $10/month starting today.
+                    </p>
+                  </>
+                )
+              ) : (
+                // BASIC to PRO upgrade
+                <>
+                  <p>You're about to upgrade from Basic to Pro plan.</p>
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span>Current credits:</span>
+                      <span className="font-semibold">{credits.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span>+ Pro plan credits:</span>
+                      <span className="font-semibold text-green-600">+{PLAN_CREDITS.PRO.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between items-center">
+                      <span className="font-semibold">New total:</span>
+                      <span className="font-bold text-primary">{(credits + PLAN_CREDITS.PRO).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Your subscription will be updated immediately and you'll be charged the prorated difference.
+                  </p>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmUpgrade(null)}
+              disabled={checkoutLoading === confirmUpgrade?.planType}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmUpgrade}
+              disabled={checkoutLoading === confirmUpgrade?.planType}
+            >
+              {checkoutLoading === confirmUpgrade?.planType ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : confirmUpgrade?.planType === PlanType.PRO ? (
+                "Upgrade to Pro"
+              ) : (
+                "Subscribe to Basic"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
