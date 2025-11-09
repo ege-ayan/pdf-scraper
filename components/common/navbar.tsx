@@ -2,6 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, FileText, Upload, Clock, Settings } from "lucide-react";
@@ -11,6 +12,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,6 +44,13 @@ export default function Navbar() {
       .slice(0, 2);
   };
 
+  const isActivePath = (path: string) => {
+    if (path === "/dashboard/home") {
+      return pathname === "/dashboard/home" || pathname === "/dashboard";
+    }
+    return pathname === path || pathname.startsWith(path + "/");
+  };
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,23 +65,38 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-10">
             <Link
               href="/dashboard/home"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                isActivePath("/dashboard/home")
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
+              <Upload className="h-4 w-4" />
               Upload
             </Link>
             <Link
               href="/dashboard/history"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                isActivePath("/dashboard/history")
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
+              <Clock className="h-4 w-4" />
               History
             </Link>
             <Link
               href="/dashboard/settings"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                isActivePath("/dashboard/settings")
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
+              <Settings className="h-4 w-4" />
               Settings
             </Link>
           </div>
