@@ -24,7 +24,7 @@ export default async function ResumeDetailPage({
   const { id } = await params;
 
   return (
-    <div className="min-h-screen  p-4">
+    <div className=" p-4">
       <div className="max-w-6xl mx-auto py-8">
         <ResumeDetail resumeId={id} />
       </div>

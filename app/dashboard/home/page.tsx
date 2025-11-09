@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen p-4">
+    <div className="p-4">
       <div className="max-w-6xl mx-auto py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">
