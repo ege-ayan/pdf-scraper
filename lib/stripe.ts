@@ -94,11 +94,7 @@ export async function createCheckoutSession(
 
     console.log(`✅ Subscription updated successfully`);
 
-    // Update credits directly for the upgrade
-    const updatedSubscription = await stripe.subscriptions.retrieve(existingSub.id);
-    const priceId = updatedSubscription.items.data[0]?.price.id;
-
-    // Update user credits based on new plan
+    // Update credits directly for the upgrade based on the new plan
     const user = await prisma.user.findFirst({
       where: { stripeCustomerId: customerId },
     });
