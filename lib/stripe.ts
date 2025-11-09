@@ -59,11 +59,90 @@ export async function createCheckoutSession(
     user.stripeCustomerId ||
     (await createOrRetrieveCustomer(userId, user.email));
 
-  // Always go through Stripe Checkout for proper payment handling
-  // Stripe will automatically handle upgrades with proration
-  console.log(`Creating checkout session for plan: ${planType}`);
+  // Check if user already has active subscriptions for upgrades
+  const existingSubscriptions = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "active",
+    limit: 5,
+  });
+
+  console.log(
+    `Found ${existingSubscriptions.data.length} active subscriptions for user ${userId}`
+  );
+
+  // Handle upgrades by updating existing subscription
+  if (existingSubscriptions.data.length > 0) {
+    const existingSub = existingSubscriptions.data[0];
+    const existingPriceId = existingSub.items.data[0]?.price.id;
+
+    console.log(
+      `Existing subscription ${existingSub.id} has price ${existingPriceId}`
+    );
+
+    // Update existing subscription to new price (can be different product)
+    console.log(`Updating subscription ${existingSub.id} to price ${priceId}`);
+
+    await stripe.subscriptions.update(existingSub.id, {
+      items: [
+        {
+          id: existingSub.items.data[0].id,
+          price: priceId,
+        },
+      ],
+      proration_behavior: "create_prorations",
+    });
+
+    console.log(`✅ Subscription updated successfully`);
+
+    // Update credits directly for the upgrade
+    const updatedSubscription = await stripe.subscriptions.retrieve(existingSub.id);
+    const priceId = updatedSubscription.items.data[0]?.price.id;
+
+    // Update user credits based on new plan
+    const user = await prisma.user.findFirst({
+      where: { stripeCustomerId: customerId },
+    });
+
+    if (user) {
+      let creditsToAdd = 0;
+      let planType = PlanType.FREE;
+
+      if (priceId === STRIPE_PRICES.BASIC) {
+        planType = PlanType.BASIC;
+        creditsToAdd = PLAN_CREDITS.BASIC;
+      } else if (priceId === STRIPE_PRICES.PRO) {
+        planType = PlanType.PRO;
+        creditsToAdd = PLAN_CREDITS.PRO;
+      }
+
+      if (creditsToAdd > 0 || user.planType !== planType) {
+        const newCredits = user.credits + creditsToAdd;
+        console.log(
+          `Upgrade credit update: plan ${user.planType} → ${planType}, credits ${user.credits} + ${creditsToAdd} = ${newCredits}`
+        );
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            planType,
+            credits: newCredits,
+          },
+        });
+
+        console.log(`✅ Upgrade credits updated: ${newCredits}`);
+      }
+    }
+
+    // Return success response
+    return {
+      id: existingSub.id,
+      url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
+    };
+  }
 
   // No existing subscriptions, create new checkout session
+  console.log(`Creating new checkout session for plan: ${planType}`);
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
@@ -165,7 +244,6 @@ export async function handleSubscriptionUpdate(
     return;
   }
 
-  // Only update if there are actual changes
   if (creditsToAdd > 0 || user.planType !== planType) {
     const newCredits = user.credits + creditsToAdd;
     console.log(
@@ -238,10 +316,15 @@ export async function deductCredits(
       });
 
       if (subscriptions.data.length === 0) {
-        throw new Error("No active subscription found. Please renew your subscription to continue using the service.");
+        throw new Error(
+          "No active subscription found. Please renew your subscription to continue using the service."
+        );
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes("active subscription")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("active subscription")
+      ) {
         throw error;
       }
       console.error("Error checking subscription status:", error);
