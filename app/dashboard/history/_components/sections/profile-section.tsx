@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, MapPin, Globe, ExternalLink } from "lucide-react";
 import { ResumeData } from "@/types";
 import { formatUrl } from "@/lib/utils";
+import Link from "next/link";
 
 interface ProfileSectionProps {
   profile: ResumeData["profile"];
@@ -38,7 +39,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
             {profile.website && (
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                <a
+                <Link
                   href={formatUrl(profile.website as string)}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -46,13 +47,13 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
                 >
                   {profile.website}
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </Link>
               </div>
             )}
             {profile.linkedIn && (
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                <a
+                <Link
                   href={formatUrl(profile.linkedIn as string)}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -60,7 +61,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
                 >
                   LinkedIn Profile
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </Link>
               </div>
             )}
           </div>

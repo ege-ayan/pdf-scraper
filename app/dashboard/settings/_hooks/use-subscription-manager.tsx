@@ -53,17 +53,13 @@ export function useSubscriptionManager({
 
   useEffect(() => {
     if (success) {
-      // Add a small delay to ensure webhook has processed
       const handleSuccess = async () => {
         try {
-          // Wait for webhook processing
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // Fetch fresh credits data
           const response = await axios.get("/api/user/credits");
           const freshCredits = response.data;
 
-          // Show success message based on fresh credits data
           if (freshCredits?.planType === PlanType.PRO) {
             toast.success(
               `🎉 Successfully upgraded to Pro! You now have ${freshCredits.credits.toLocaleString()} credits.`,
@@ -78,7 +74,6 @@ export function useSubscriptionManager({
             toast.success("Subscription updated successfully!");
           }
 
-          // Update local state with fresh data
           setUserCredits(freshCredits);
         } catch (error) {
           console.error("Failed to refresh credits after subscription:", error);

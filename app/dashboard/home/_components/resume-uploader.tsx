@@ -15,6 +15,7 @@ import { useResumeProcessing } from "../_hooks/use-resume-processing";
 import { ProcessingStep } from "@/types";
 import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 import { Loader2, CheckCircle, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function ResumeUploader() {
   const {
@@ -29,7 +30,6 @@ export default function ResumeUploader() {
     isComplete,
   } = useResumeProcessing();
 
-  // Smooth scroll to results when processing completes
   useEffect(() => {
     if (isComplete) {
       setTimeout(() => {
@@ -40,7 +40,7 @@ export default function ResumeUploader() {
             block: "start",
           });
         }
-      }, 500); // Small delay to ensure DOM is updated
+      }, 500);
     }
   }, [isComplete]);
 
@@ -515,7 +515,7 @@ export default function ResumeUploader() {
                   </DialogContent>
                 </Dialog>
                 <Button asChild>
-                  <a href="/dashboard/history">View in History</a>
+                  <Link href="/dashboard/history">View in History</Link>
                 </Button>
                 <Button
                   variant="outline"
