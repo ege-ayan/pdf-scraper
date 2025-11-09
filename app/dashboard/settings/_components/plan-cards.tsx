@@ -349,41 +349,37 @@ export function PlanCards({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Plan Upgrade</DialogTitle>
-            <DialogDescription>
+            <div className="text-muted-foreground text-sm space-y-4">
               {currentPlan === PlanType.FREE ? (
                 // FREE to BASIC/PRO subscription
                 confirmUpgrade?.planType === PlanType.PRO ? (
                   <>
                     <p>You're about to subscribe to the Pro plan.</p>
-                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="p-4 bg-muted rounded-lg">
                       <div className="flex justify-between items-center">
                         <span>Credits included:</span>
                         <span className="font-bold text-primary">{PLAN_CREDITS.PRO.toLocaleString()}</span>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      You'll be charged $20/month starting today.
-                    </p>
+                    <p>You'll be charged $20/month starting today.</p>
                   </>
                 ) : (
                   <>
                     <p>You're about to subscribe to the Basic plan.</p>
-                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="p-4 bg-muted rounded-lg">
                       <div className="flex justify-between items-center">
                         <span>Credits included:</span>
                         <span className="font-bold text-primary">{PLAN_CREDITS.BASIC.toLocaleString()}</span>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      You'll be charged $10/month starting today.
-                    </p>
+                    <p>You'll be charged $10/month starting today.</p>
                   </>
                 )
               ) : (
                 // BASIC to PRO upgrade
                 <>
                   <p>You're about to upgrade from Basic to Pro plan.</p>
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                  <div className="p-4 bg-muted rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                       <span>Current credits:</span>
                       <span className="font-semibold">{credits.toLocaleString()}</span>
@@ -397,12 +393,10 @@ export function PlanCards({
                       <span className="font-bold text-primary">{(credits + PLAN_CREDITS.PRO).toLocaleString()}</span>
                     </div>
                   </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Your subscription will be updated immediately and you'll be charged the prorated difference.
-                  </p>
+                  <p>Your subscription will be updated immediately and you'll be charged the prorated difference.</p>
                 </>
               )}
-            </DialogDescription>
+            </div>
           </DialogHeader>
           <DialogFooter>
             <Button
