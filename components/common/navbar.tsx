@@ -65,7 +65,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center space-x-10">
+          <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/dashboard/home"
               className={`flex items-center gap-2 px-2 py-1 text-sm font-medium transition-colors rounded-md ${
