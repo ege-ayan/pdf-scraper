@@ -59,39 +59,9 @@ export async function createCheckoutSession(
     user.stripeCustomerId ||
     (await createOrRetrieveCustomer(userId, user.email));
 
-  // Check if user already has active subscriptions
-  const existingSubscriptions = await stripe.subscriptions.list({
-    customer: customerId,
-    status: "active",
-    limit: 5,
-  });
-
-  console.log(`Found ${existingSubscriptions.data.length} active subscriptions for user ${userId}`);
-
-  // For upgrades, update existing subscription instead of creating new one
-  if (existingSubscriptions.data.length > 0) {
-    const existingSub = existingSubscriptions.data[0];
-    const existingPriceId = existingSub.items.data[0]?.price.id;
-
-    console.log(`Existing subscription ${existingSub.id} has price ${existingPriceId}`);
-
-    // Update the existing subscription with new price
-    await stripe.subscriptions.update(existingSub.id, {
-      items: [{
-        id: existingSub.items.data[0].id,
-        price: priceId,
-      }],
-      proration_behavior: 'create_prorations',
-    });
-
-    console.log(`Updated subscription ${existingSub.id} to new price ${priceId}`);
-
-    // Return success response since we're updating, not creating checkout
-    return {
-      id: existingSub.id,
-      url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
-    };
-  }
+  // Always go through Stripe Checkout for proper payment handling
+  // Stripe will automatically handle upgrades with proration
+  console.log(`Creating checkout session for plan: ${planType}`);
 
   // No existing subscriptions, create new checkout session
   const session = await stripe.checkout.sessions.create({
