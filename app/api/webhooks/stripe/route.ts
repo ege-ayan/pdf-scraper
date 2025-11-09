@@ -5,7 +5,6 @@ import {
   stripe,
   handleSubscriptionUpdate,
   handleSubscriptionDelete,
-  handleInvoicePayment,
 } from "@/lib/stripe";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -89,12 +88,7 @@ async function handleSubscriptionUpdated(
       return false;
     }
 
-    // Check if this subscription is being cancelled
-    if (subscription.cancel_at_period_end || subscription.canceled_at) {
-      console.log(`🚫 Subscription ${subscription.id} is being cancelled, skipping credit addition`);
-      return true; // Don't process cancelled subscriptions as updates
-    }
-
+    // Handle plan changes and adjust credits
     await handleSubscriptionUpdate(subscription.customer, subscription);
 
     console.log(`✅ Subscription updated: ${subscription.id}`);
@@ -183,11 +177,12 @@ async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<boolean> {
       return true;
     }
 
-    // Only add credits on successful payment - plan changes handled by subscription.updated
-    await handleInvoicePayment(invoice.customer, subscriptionId);
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    await handleSubscriptionUpdate(invoice.customer, subscription);
 
     console.log(
-      `✅ Subscription payment processed and credits added: ${invoice.id} for subscription: ${subscriptionId}`
+      `✅ Subscription activated and credits added: ${invoice.id} for subscription: ${subscriptionId}`
     );
     return true;
   } catch (error) {

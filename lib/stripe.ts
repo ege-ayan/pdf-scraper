@@ -59,52 +59,41 @@ export async function createCheckoutSession(
     user.stripeCustomerId ||
     (await createOrRetrieveCustomer(userId, user.email));
 
-  // Check if user already has an active subscription and handle upgrades properly
-  try {
-    const existingSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 10,
+  // Check if user already has active subscriptions
+  const existingSubscriptions = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "active",
+    limit: 5,
+  });
+
+  console.log(`Found ${existingSubscriptions.data.length} active subscriptions for user ${userId}`);
+
+  // For upgrades, update existing subscription instead of creating new one
+  if (existingSubscriptions.data.length > 0) {
+    const existingSub = existingSubscriptions.data[0];
+    const existingPriceId = existingSub.items.data[0]?.price.id;
+
+    console.log(`Existing subscription ${existingSub.id} has price ${existingPriceId}`);
+
+    // Update the existing subscription with new price
+    await stripe.subscriptions.update(existingSub.id, {
+      items: [{
+        id: existingSub.items.data[0].id,
+        price: priceId,
+      }],
+      proration_behavior: 'create_prorations',
     });
 
-    console.log(
-      `Found ${existingSubscriptions.data.length} active subscriptions for customer ${customerId}`
-    );
+    console.log(`Updated subscription ${existingSub.id} to new price ${priceId}`);
 
-    if (existingSubscriptions.data.length > 0) {
-      // Check if upgrading from Basic to Pro
-      const existingSub = existingSubscriptions.data[0];
-      const existingPriceId = existingSub.items.data[0]?.price.id;
-
-      if (planType === PlanType.PRO && existingPriceId === STRIPE_PRICES.BASIC) {
-        // This is an upgrade: update existing subscription instead of cancelling
-        console.log(`⬆️ Upgrading existing BASIC subscription ${existingSub.id} to PRO`);
-
-        await stripe.subscriptions.update(existingSub.id, {
-          items: [{
-            id: existingSub.items.data[0].id,
-            price: STRIPE_PRICES.PRO,
-          }],
-          proration_behavior: 'create_prorations',
-        });
-
-        // Return existing session info since we're updating, not creating new
-        return {
-          id: existingSub.id,
-          url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
-        };
-      } else {
-        // Cancel existing subscriptions for new purchases or downgrades
-        for (const subscription of existingSubscriptions.data) {
-          console.log(`Cancelling existing subscription: ${subscription.id}`);
-          await stripe.subscriptions.cancel(subscription.id);
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error handling existing subscriptions:", error);
+    // Return success response since we're updating, not creating checkout
+    return {
+      id: existingSub.id,
+      url: `${process.env.NEXTAUTH_URL}/dashboard/settings?success=true`,
+    };
   }
 
+  // No existing subscriptions, create new checkout session
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
@@ -159,6 +148,11 @@ export async function handleSubscriptionUpdate(
 ) {
   console.log(`🔄 Processing subscription update: ${subscription.id}`);
 
+  if (!subscription.customer || typeof subscription.customer !== "string") {
+    console.error("❌ Invalid customer ID in subscription.updated");
+    return;
+  }
+
   const user = await prisma.user.findFirst({
     where: { stripeCustomerId: customerId },
   });
@@ -169,118 +163,58 @@ export async function handleSubscriptionUpdate(
   }
 
   console.log(`✅ Found user: ${user.id} (${user.email})`);
-  console.log(`   Current plan: ${user.planType}, Current credits: ${user.credits}`);
+  console.log(
+    `   Current plan: ${user.planType}, Current credits: ${user.credits}`
+  );
 
   const priceId = subscription.items.data[0]?.price.id;
-  console.log(`Subscription price ID: ${priceId}`);
 
-  let newPlanType = PlanType.FREE;
+  let planType = PlanType.FREE;
+  let creditsToAdd = 0;
 
   if (priceId === STRIPE_PRICES.BASIC) {
-    newPlanType = PlanType.BASIC;
-    console.log(`📈 Plan changed to BASIC for user ${user.id}`);
+    planType = PlanType.BASIC;
+    // Only add credits if this is a plan change (upgrade/downgrade), not for existing plans
+    if (user.planType !== PlanType.BASIC) {
+      creditsToAdd = PLAN_CREDITS.BASIC;
+      console.log(`📈 Plan changed to BASIC - adding ${creditsToAdd} credits`);
+    } else {
+      console.log(`📈 Plan is already BASIC - no credit change needed`);
+    }
   } else if (priceId === STRIPE_PRICES.PRO) {
-    newPlanType = PlanType.PRO;
-    console.log(`📈 Plan changed to PRO for user ${user.id}`);
+    planType = PlanType.PRO;
+    // Only add credits if this is a plan change (upgrade/downgrade), not for existing plans
+    if (user.planType !== PlanType.PRO) {
+      creditsToAdd = PLAN_CREDITS.PRO;
+      console.log(`📈 Plan changed to PRO - adding ${creditsToAdd} credits`);
+    } else {
+      console.log(`📈 Plan is already PRO - no credit change needed`);
+    }
   } else {
     console.log(`❓ Unknown price ID: ${priceId} - keeping current plan`);
     return;
   }
 
-  // Handle plan changes: adjust credits accordingly
-  let creditsAdjustment = 0;
-  if (user.planType === PlanType.BASIC && newPlanType === PlanType.PRO) {
-    // Upgrade from Basic to Pro: add the difference to reach PRO total
-    creditsAdjustment = PLAN_CREDITS.PRO - PLAN_CREDITS.BASIC; // Add the difference (10k)
-    console.log(`⬆️ Upgrading BASIC → PRO: adding ${creditsAdjustment} credits to existing ${user.credits}`);
-  } else if (user.planType === PlanType.PRO && newPlanType === PlanType.BASIC) {
-    // Downgrade from Pro to Basic: don't add credits
-    creditsAdjustment = 0;
-    console.log(`⬇️ Downgrading PRO → BASIC: keeping current credits ${user.credits}`);
-  } else if (user.planType === PlanType.FREE && newPlanType === PlanType.BASIC) {
-    // New Basic subscription: add Basic credits
-    creditsAdjustment = PLAN_CREDITS.BASIC;
-    console.log(`🆕 New BASIC subscription: adding ${creditsAdjustment} credits`);
-  } else if (user.planType === PlanType.FREE && newPlanType === PlanType.PRO) {
-    // New Pro subscription: add Pro credits
-    creditsAdjustment = PLAN_CREDITS.PRO;
-    console.log(`🆕 New PRO subscription: adding ${creditsAdjustment} credits`);
-  }
+  // Only update if there are actual changes
+  if (creditsToAdd > 0 || user.planType !== planType) {
+    const newCredits = user.credits + creditsToAdd;
+    console.log(
+      `Updating user ${user.id}: plan ${user.planType} → ${planType}, credits ${user.credits} + ${creditsToAdd} = ${newCredits}`
+    );
 
-  const newCredits = user.credits + creditsAdjustment;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        planType,
+        credits: newCredits,
+      },
+    });
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      planType: newPlanType,
-      credits: newCredits,
-    },
-  });
-
-  console.log(
-    `✅ Updated user ${user.id}: plan=${newPlanType}, credits=${newCredits}`
-  );
-}
-
-export async function handleInvoicePayment(customerId: string, subscriptionId: string) {
-  console.log(`💰 Processing invoice payment for customer ${customerId}, subscription ${subscriptionId}`);
-
-  const user = await prisma.user.findFirst({
-    where: { stripeCustomerId: customerId },
-  });
-
-  if (!user) {
-    console.error(`❌ User not found for customer ${customerId}`);
-    return;
-  }
-
-  console.log(`✅ Found user: ${user.id} (${user.email})`);
-  console.log(`   Current plan: ${user.planType}, Current credits: ${user.credits}`);
-
-  // Get subscription details to determine plan type
-  try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    const priceId = subscription.items.data[0]?.price.id;
-
-    let creditsToAdd = 0;
-
-    if (priceId === STRIPE_PRICES.BASIC) {
-      // Only add credits if user is currently FREE (initial subscription)
-      if (user.planType === PlanType.FREE) {
-        creditsToAdd = PLAN_CREDITS.BASIC;
-        console.log(`💳 Initial BASIC subscription payment: adding ${creditsToAdd} credits`);
-      } else {
-        console.log(`💳 BASIC subscription payment: plan changes handled by subscription.updated`);
-      }
-    } else if (priceId === STRIPE_PRICES.PRO) {
-      // Only add credits if user is currently FREE (initial subscription)
-      if (user.planType === PlanType.FREE) {
-        creditsToAdd = PLAN_CREDITS.PRO;
-        console.log(`💳 Initial PRO subscription payment: adding ${creditsToAdd} credits`);
-      } else {
-        console.log(`💳 PRO subscription payment: plan changes handled by subscription.updated`);
-      }
-    } else {
-      console.log(`❓ Unknown price ID in payment: ${priceId}`);
-      return;
-    }
-
-    if (creditsToAdd > 0) {
-      const newCredits = user.credits + creditsToAdd;
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          credits: newCredits,
-        },
-      });
-
-      console.log(
-        `✅ Payment processed: user ${user.id} credits updated from ${user.credits} to ${newCredits}`
-      );
-    }
-  } catch (error) {
-    console.error(`❌ Failed to retrieve subscription ${subscriptionId}:`, error);
+    console.log(
+      `✅ Updated user ${user.id}: plan=${planType}, credits=${newCredits}`
+    );
+  } else {
+    console.log(`ℹ️ No changes needed for user ${user.id}`);
   }
 }
 
