@@ -112,10 +112,6 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
         </Button>
         <div className="flex gap-2">
           <ResumeRawDataDialog resumeId={resumeId} resumeData={resumeData} />
-          <Button variant="outline" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
           <Button
             variant="destructive"
             onClick={handleDeleteClick}
