@@ -5,6 +5,7 @@ import {
   stripe,
   handleSubscriptionUpdate,
   handleSubscriptionDelete,
+  handleInvoicePayment,
 } from "@/lib/stripe";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -182,12 +183,11 @@ async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<boolean> {
       return true;
     }
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-    await handleSubscriptionUpdate(invoice.customer, subscription);
+    // Only add credits on successful payment - plan changes handled by subscription.updated
+    await handleInvoicePayment(invoice.customer, subscriptionId);
 
     console.log(
-      `✅ Subscription activated and credits added: ${invoice.id} for subscription: ${subscriptionId}`
+      `✅ Subscription payment processed and credits added: ${invoice.id} for subscription: ${subscriptionId}`
     );
     return true;
   } catch (error) {
