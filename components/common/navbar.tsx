@@ -68,10 +68,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-10">
             <Link
               href="/dashboard/home"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-2 py-1 text-sm font-medium transition-colors rounded-md ${
                 isActivePath("/dashboard/home")
-                  ? "text-foreground underline underline-offset-4"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-foreground bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               <Upload className="h-4 w-4" />
@@ -79,10 +79,10 @@ export default function Navbar() {
             </Link>
             <Link
               href="/dashboard/history"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-2 py-1 text-sm font-medium transition-colors rounded-md ${
                 isActivePath("/dashboard/history")
-                  ? "text-foreground underline underline-offset-4"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-foreground bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               <Clock className="h-4 w-4" />
@@ -90,10 +90,10 @@ export default function Navbar() {
             </Link>
             <Link
               href="/dashboard/settings"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-2 py-1 text-sm font-medium transition-colors rounded-md ${
                 isActivePath("/dashboard/settings")
-                  ? "text-foreground underline underline-offset-4"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-foreground bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
               <Settings className="h-4 w-4" />
