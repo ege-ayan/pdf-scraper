@@ -51,7 +51,12 @@ export function PlanCards({
   } | null>(null);
 
   const handleUpgradeClick = (planType: PlanType.BASIC | PlanType.PRO) => {
-    setConfirmUpgrade({ planType, open: true });
+    // Only show confirmation modal for upgrades (not first-time purchases)
+    if (currentPlan === PlanType.FREE) {
+      onSubscribe(planType);
+    } else {
+      setConfirmUpgrade({ planType, open: true });
+    }
   };
 
   const handleConfirmUpgrade = async () => {
