@@ -2,25 +2,17 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  LogOut,
-  FileText,
-  ChevronDown,
-  Upload,
-  History,
-  Settings,
-  Home
-} from "lucide-react";
+import { LogOut, FileText, ChevronDown, Menu, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
-  const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,6 +21,12 @@ export default function Navbar() {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownOpen(false);
+      }
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
       }
     };
 
@@ -41,6 +39,7 @@ export default function Navbar() {
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/login" });
     setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   const getInitials = (name: string) => {
@@ -50,13 +49,6 @@ export default function Navbar() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const isActive = (path: string) => {
-    if (path === "/dashboard/home") {
-      return pathname === "/dashboard/home" || pathname === "/dashboard";
-    }
-    return pathname === path;
   };
 
   return (
@@ -73,78 +65,42 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
               href="/dashboard/home"
-              className={`flex items-center space-x-2 text-sm font-medium transition-colors ${
-                isActive("/dashboard/home")
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Home className="h-4 w-4" />
-              <span>Home</span>
+              Upload
             </Link>
             <Link
               href="/dashboard/history"
-              className={`flex items-center space-x-2 text-sm font-medium transition-colors ${
-                isActive("/dashboard/history")
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <History className="h-4 w-4" />
-              <span>History</span>
+              History
             </Link>
             <Link
               href="/dashboard/settings"
-              className={`flex items-center space-x-2 text-sm font-medium transition-colors ${
-                isActive("/dashboard/settings")
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </Link>
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="flex md:hidden items-center space-x-1">
-            <Link
-              href="/dashboard/home"
-              className={`flex items-center justify-center p-2 rounded-md transition-colors ${
-                isActive("/dashboard/home")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <Home className="h-5 w-5" />
-            </Link>
-            <Link
-              href="/dashboard/history"
-              className={`flex items-center justify-center p-2 rounded-md transition-colors ${
-                isActive("/dashboard/history")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <History className="h-5 w-5" />
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className={`flex items-center justify-center p-2 rounded-md transition-colors ${
-                isActive("/dashboard/settings")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <Settings className="h-5 w-5" />
+              Settings
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </Button>
+
             {status === "loading" ? (
               <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
             ) : session?.user ? (
@@ -164,9 +120,28 @@ export default function Navbar() {
                   </Avatar>
                 </Button>
 
-                {/* Desktop Dropdown Menu - Only Logout */}
+                {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-background border border-border rounded-md shadow-lg z-50">
+                    <div className="p-3 border-b border-border">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {getInitials(
+                              session.user.name || session.user.email || "U"
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {session.user.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {session.user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                     <div className="py-1">
                       <button
                         onClick={handleSignOut}
@@ -192,6 +167,38 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div
+          ref={mobileMenuRef}
+          className="md:hidden border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60"
+        >
+          <div className="px-4 py-3 space-y-1">
+            <Link
+              href="/dashboard/home"
+              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Upload
+            </Link>
+            <Link
+              href="/dashboard/history"
+              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              History
+            </Link>
+            <Link
+              href="/dashboard/settings"
+              className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Settings
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
