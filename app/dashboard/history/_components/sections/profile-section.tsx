@@ -10,6 +10,14 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ profile }: ProfileSectionProps) {
+  // Helper function to ensure URL has protocol
+  const formatUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return `https://${url}`;
+  };
   return (
     <Card>
       <CardHeader>
@@ -38,7 +46,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <a
-                  href={profile.website as string}
+                  href={formatUrl(profile.website as string)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center gap-1"
@@ -52,7 +60,7 @@ export default function ProfileSection({ profile }: ProfileSectionProps) {
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <a
-                  href={profile.linkedIn as string}
+                  href={formatUrl(profile.linkedIn as string)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center gap-1"
