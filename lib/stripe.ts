@@ -159,32 +159,42 @@ export async function handleSubscriptionUpdate(
 
   if (priceId === STRIPE_PRICES.BASIC) {
     planType = PlanType.BASIC;
-    // Only add credits if user is upgrading from FREE to BASIC
+    // Add BASIC credits for new subscriptions or upgrades
     if (user.planType === PlanType.FREE) {
       creditsToAdd = PLAN_CREDITS.BASIC;
       console.log(
         `Upgrading from FREE to BASIC - adding ${creditsToAdd} credits`
       );
+    } else if (user.planType === PlanType.BASIC) {
+      console.log(`User already has BASIC plan - not adding additional credits`);
     } else {
+      // Handle case where user cancelled PRO subscription but has credits preserved
+      creditsToAdd = PLAN_CREDITS.BASIC;
       console.log(
-        `User already has ${user.planType} plan - not adding credits for BASIC`
+        `Downgrading from ${user.planType} to BASIC - adding ${creditsToAdd} credits to existing ${user.credits}`
       );
     }
   } else if (priceId === STRIPE_PRICES.PRO) {
     planType = PlanType.PRO;
-    // Only add credits if user is upgrading from FREE to PRO, or BASIC to PRO
+    // Add PRO credits for new subscriptions or upgrades
     if (user.planType === PlanType.FREE) {
       creditsToAdd = PLAN_CREDITS.PRO;
       console.log(
         `Upgrading from FREE to PRO - adding ${creditsToAdd} credits`
       );
     } else if (user.planType === PlanType.BASIC) {
-      creditsToAdd = PLAN_CREDITS.PRO; // Add full PRO credits (not difference)
+      creditsToAdd = PLAN_CREDITS.PRO; // Add full PRO credits
       console.log(
         `Upgrading from BASIC to PRO - adding ${creditsToAdd} credits`
       );
-    } else {
+    } else if (user.planType === PlanType.PRO) {
       console.log(`User already has PRO plan - not adding additional credits`);
+    } else {
+      // Handle case where user cancelled subscription but has credits preserved
+      creditsToAdd = PLAN_CREDITS.PRO;
+      console.log(
+        `Reactivating PRO subscription - adding ${creditsToAdd} credits to existing ${user.credits}`
+      );
     }
   } else {
     console.log(`Unknown price ID: ${priceId} - keeping FREE plan`);
@@ -219,19 +229,19 @@ export async function handleSubscriptionDelete(customerId: string) {
   }
 
   console.log(
-    `Downgrading user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`
+    `Downgrading user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} (preserved)`
   );
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
       planType: PlanType.FREE,
-      credits: 0, // Reset credits to freeze scraping access
+      // Keep existing credits so they can be used if user upgrades immediately
     },
   });
 
   console.log(
-    `✅ Downgraded user ${user.id} to FREE plan with 0 credits (scraping frozen)`
+    `✅ Downgraded user ${user.id} to FREE plan with ${user.credits} credits preserved`
   );
 }
 
