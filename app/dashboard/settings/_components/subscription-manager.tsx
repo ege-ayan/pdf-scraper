@@ -22,7 +22,7 @@ import {
   Settings,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PlanType } from "@/lib/types/enums";
+import { PlanType } from "@/types";
 import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 
 interface UserCredits {

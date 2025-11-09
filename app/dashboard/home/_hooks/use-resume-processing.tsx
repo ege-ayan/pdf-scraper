@@ -8,8 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserCredits } from "./use-user-credits";
 import { processResumePDF } from "@/lib/pdf-utils";
 import { cleanupImages } from "@/lib/supabase";
-import { ProcessingStep, ErrorType } from "@/lib/types/enums";
-import { UseResumeProcessingReturn } from "@/lib/types";
+import { ProcessingStep, ErrorType, UseResumeProcessingReturn } from "@/types";
 import { CREDITS_PER_SCRAPE, MAX_FILE_SIZE } from "@/lib/constants";
 
 function useResumeParser(onProgress?: (step: ProcessingStep) => void) {
@@ -179,11 +178,17 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
 
       // Clean up uploaded images from Supabase after successful processing
       try {
-        console.log("🧹 Cleaning up uploaded images:", processedImages.imagePaths);
+        console.log(
+          "🧹 Cleaning up uploaded images:",
+          processedImages.imagePaths
+        );
         await cleanupImages(processedImages.imagePaths);
         console.log("✅ Successfully cleaned up images");
       } catch (cleanupError) {
-        console.warn("⚠️ Failed to cleanup images, but processing was successful:", cleanupError);
+        console.warn(
+          "⚠️ Failed to cleanup images, but processing was successful:",
+          cleanupError
+        );
         // Don't fail the entire process if cleanup fails
       }
 

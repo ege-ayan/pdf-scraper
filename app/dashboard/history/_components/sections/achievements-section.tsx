@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Calendar } from "lucide-react";
-import { ResumeData } from "@/lib/types";
+import { ResumeData } from "@/types";
 
 interface AchievementsSectionProps {
   achievements: ResumeData["achievements"];

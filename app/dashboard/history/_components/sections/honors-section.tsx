@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, Calendar } from "lucide-react";
-import { ResumeData } from "@/lib/types";
+import { ResumeData } from "@/types";
 
 interface HonorsSectionProps {
   honors: ResumeData["honors"];

@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, Calendar } from "lucide-react";
-import { ResumeData } from "@/lib/types";
-import { DEGREE_LABELS } from "@/lib/constants/labels";
+import { ResumeData } from "@/types";
+import { DEGREE_LABELS } from "@/lib/constants";
 
 interface EducationSectionProps {
   educations: ResumeData["educations"];

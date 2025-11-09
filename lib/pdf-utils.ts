@@ -5,7 +5,7 @@ import {
   type UploadedImage,
   type ProcessedResumeImages,
   ProcessingStep,
-} from "./types";
+} from "@/types";
 import { MAX_FILE_SIZE } from "./constants";
 
 export async function pdfToImages(file: File): Promise<Blob[]> {

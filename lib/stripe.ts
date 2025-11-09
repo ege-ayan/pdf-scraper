@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
-import { PlanType } from "./types/enums";
+import { PlanType } from "@/types";
 import {
   CREDITS_PER_SCRAPE,
   STRIPE_PRICES,

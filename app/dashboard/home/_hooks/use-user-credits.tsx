@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { PlanType } from "@/lib/types/enums";
+import { PlanType } from "@/types";
 
 interface UserCredits {
   credits: number;

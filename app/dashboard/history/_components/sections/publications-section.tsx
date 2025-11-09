@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Calendar, ExternalLink } from "lucide-react";
-import { ResumeData } from "@/lib/types";
+import { ResumeData } from "@/types";
 
 interface PublicationsSectionProps {
   publications: ResumeData["publications"];

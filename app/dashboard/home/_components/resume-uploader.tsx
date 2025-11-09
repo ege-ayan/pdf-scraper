@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import PdfDropzone from "./pdf-dropzone";
 import { useResumeProcessing } from "../_hooks/use-resume-processing";
-import { ProcessingStep } from "@/lib/types/enums";
+import { ProcessingStep } from "@/types";
 import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 import { Loader2, CheckCircle, FileText } from "lucide-react";
 

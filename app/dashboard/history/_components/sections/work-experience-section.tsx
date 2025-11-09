@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar } from "lucide-react";
-import { ResumeData } from "@/lib/types";
-import { EMPLOYMENT_TYPE_LABELS, LOCATION_TYPE_LABELS } from "@/lib/constants/labels";
+import { ResumeData } from "@/types";
+import { EMPLOYMENT_TYPE_LABELS, LOCATION_TYPE_LABELS } from "@/lib/constants";
 
 interface WorkExperienceSectionProps {
   workExperiences: ResumeData["workExperiences"];

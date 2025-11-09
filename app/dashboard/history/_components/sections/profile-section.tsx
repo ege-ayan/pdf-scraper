@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, MapPin, Globe, ExternalLink } from "lucide-react";
-import { ResumeData } from "@/lib/types";
+import { ResumeData } from "@/types";
 
 interface ProfileSectionProps {
   profile: ResumeData["profile"];

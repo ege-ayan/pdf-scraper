@@ -1,4 +1,4 @@
-import { EmploymentType, LocationType, Degree, LanguageLevel } from "../types";
+import { EmploymentType, LocationType, Degree, LanguageLevel } from "@/types";
 
 export const resumeStructuredSchema = {
   type: "object",

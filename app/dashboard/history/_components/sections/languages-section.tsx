@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ResumeData } from "@/lib/types";
-import { LANGUAGE_LEVEL_LABELS } from "@/lib/constants/labels";
+import { ResumeData } from "@/types";
+import { LANGUAGE_LEVEL_LABELS } from "@/lib/constants";
 
 interface LanguagesSectionProps {
   languages: ResumeData["languages"];
