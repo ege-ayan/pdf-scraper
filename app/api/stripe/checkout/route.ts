@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createCheckoutSession } from "@/lib/stripe";
 import { STRIPE_PRICES } from "@/lib/constants";
+import { PlanType } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     const { planType } = await request.json();
 
-    if (!planType || !["BASIC", "PRO"].includes(planType)) {
+    if (!planType || ![PlanType.BASIC, PlanType.PRO].includes(planType)) {
       return NextResponse.json(
         { message: "Invalid plan type. Must be BASIC or PRO" },
         { status: 400 }
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const priceId =
-      planType === "BASIC" ? STRIPE_PRICES.BASIC : STRIPE_PRICES.PRO;
+      planType === PlanType.BASIC ? STRIPE_PRICES.BASIC : STRIPE_PRICES.PRO;
 
     if (!priceId) {
       return NextResponse.json(

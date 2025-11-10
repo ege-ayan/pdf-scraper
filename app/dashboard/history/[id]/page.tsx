@@ -7,11 +7,7 @@ interface ResumeDetailPageProps {
   }>;
 }
 
-export async function generateMetadata({
-  params,
-}: ResumeDetailPageProps): Promise<Metadata> {
-  const { id } = await params;
-
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Resume Details - PDF Scraper`,
     description: `View detailed resume information`,

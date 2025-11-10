@@ -62,15 +62,3 @@ export async function uploadImagesToStorage(
     throw error;
   }
 }
-
-export async function cleanupImages(paths: string[]): Promise<void> {
-  try {
-    const { error } = await supabase.storage.from(bucketName).remove(paths);
-
-    if (error) {
-      console.warn("Failed to cleanup images:", error.message);
-    }
-  } catch (error) {
-    console.warn("Cleanup error:", error);
-  }
-}
