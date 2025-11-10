@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseResumeWithOpenAI } from "@/lib/openai";
 import { deductCredits } from "@/lib/stripe";
+import { CREDITS_PER_SCRAPE } from "@/lib/constants";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -53,7 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has sufficient credits
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { credits: true },
@@ -66,11 +66,12 @@ export async function POST(request: NextRequest) {
     if (user.credits < 100) {
       return NextResponse.json(
         {
-          message: "Insufficient credits. Please upgrade your plan to continue.",
+          message:
+            "Insufficient credits. Please upgrade your plan to continue.",
           credits: user.credits,
-          required: 100
+          required: 100,
         },
-        { status: 402 } // Payment Required
+        { status: 402 }
       );
     }
 
@@ -80,8 +81,7 @@ export async function POST(request: NextRequest) {
       resumeData = await parseResumeWithOpenAI(imageUrls);
       console.log("Resume parsed successfully");
 
-      // Deduct credits after successful parsing
-      await deductCredits(session.user.id, 100);
+      await deductCredits(session.user.id, CREDITS_PER_SCRAPE);
       console.log("Credits deducted successfully");
     } else {
       return NextResponse.json(

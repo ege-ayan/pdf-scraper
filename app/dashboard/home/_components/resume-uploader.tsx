@@ -14,7 +14,7 @@ import PdfDropzone from "./pdf-dropzone";
 import { useResumeProcessing } from "../_hooks/use-resume-processing";
 import { ProcessingStep } from "@/types";
 import { CREDITS_PER_SCRAPE } from "@/lib/constants";
-import { Loader2, CheckCircle, FileText } from "lucide-react";
+import { Loader2, CheckCircle, FileText, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 
 export default function ResumeUploader() {
@@ -167,7 +167,7 @@ export default function ResumeUploader() {
                   return (
                     <div className="bg-white rounded-lg border p-6 space-y-6">
                       <h4 className="font-semibold text-lg mb-4">
-                        <FileText className="h-4 w-4" /> Extracted Resume Data
+                        Extracted Resume Data
                       </h4>
 
                       {/* Profile Section */}
@@ -190,16 +190,15 @@ export default function ResumeUploader() {
                             )}
                             <div className="flex flex-wrap gap-4 text-sm">
                               {resumeData.profile.email && (
-                                <span>📧 {resumeData.profile.email}</span>
+                                <span> {resumeData.profile.email}</span>
                               )}
                               {resumeData.profile.phone && (
-                                <span>📱 {resumeData.profile.phone}</span>
+                                <span>{resumeData.profile.phone}</span>
                               )}
                             </div>
                             {(resumeData.profile.city ||
                               resumeData.profile.country) && (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <span>📍</span>
                                 <span>
                                   {resumeData.profile.city}
                                   {resumeData.profile.city &&

@@ -3,6 +3,7 @@ import { type UploadedImage } from "@/types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const signedUrlDuration = 600;
 const bucketName = "pdf-scraper";
 const folderName = "resume-images";
 
@@ -31,16 +32,21 @@ export async function uploadImageToStorage(blob: Blob): Promise<UploadedImage> {
       throw new Error(`Upload failed: ${error.message}`);
     }
 
-    const { data: urlData } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
+    const { data: signedUrlData, error: signedUrlError } =
+      await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, signedUrlDuration);
 
-    if (!urlData.publicUrl) {
-      throw new Error("Failed to get public URL for uploaded image");
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      throw new Error(
+        `Failed to create signed URL: ${
+          signedUrlError?.message || "Unknown error"
+        }`
+      );
     }
 
     return {
-      url: urlData.publicUrl,
+      url: signedUrlData.signedUrl,
       path: filePath,
     };
   } catch (error) {
