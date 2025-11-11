@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getUserCredits } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(userCredits);
   } catch (error) {
-    console.error("Get user credits error:", error);
+    logger.error("Get user credits error", error);
     return NextResponse.json(
       { message: "Failed to get user credits" },
       { status: 500 }

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { resumeStructuredSchema } from "./schemas/openai";
+import { logger } from "./logger";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,8 +23,8 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
     );
   }
 
-  console.log(
-    `🤖 Starting AI resume parsing for ${imageUrls.length} images...`
+  logger.info(
+    `Starting AI resume parsing for ${imageUrls.length} images`
   );
 
   const validateImageUrl = async (
@@ -37,8 +38,8 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(
-          `🔍 Validating URL ${index} (attempt ${attempt}/${maxRetries}): ${url.substring(
+        logger.debug(
+          `Validating URL ${index} (attempt ${attempt}/${maxRetries}): ${url.substring(
             0,
             60
           )}...`
@@ -53,8 +54,8 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
         });
 
         if (!response.ok) {
-          console.warn(
-            `⚠️ URL not accessible: ${url} - Status: ${response.status} (attempt ${attempt})`
+          logger.warn(
+            `URL not accessible: ${url} - Status: ${response.status} (attempt ${attempt})`
           );
 
           // If it's the last attempt, return false
@@ -72,7 +73,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
         // Check content type to ensure it's an image
         const contentType = response.headers.get("content-type");
         if (contentType && !contentType.startsWith("image/")) {
-          console.warn(`⚠️ URL does not point to an image: ${contentType}`);
+          logger.warn(`URL does not point to an image: ${contentType}`);
           return false;
         }
 
@@ -83,33 +84,33 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
           const maxSizeBytes = 20 * 1024 * 1024; // 20MB
 
           if (sizeInBytes > maxSizeBytes) {
-            console.warn(
-              `⚠️ Image too large: ${sizeInBytes} bytes (max: ${maxSizeBytes} bytes)`
+            logger.warn(
+              `Image too large: ${sizeInBytes} bytes (max: ${maxSizeBytes} bytes)`
             );
             return false;
           }
 
-          console.log(
-            `📏 Image size: ${(sizeInBytes / 1024 / 1024).toFixed(2)} MB`
+          logger.debug(
+            `Image size: ${(sizeInBytes / 1024 / 1024).toFixed(2)} MB`
           );
         }
 
-        console.log(`✅ URL ${index} validated successfully`);
+        logger.debug(`URL ${index} validated successfully`);
         return true;
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
 
         if (attempt === maxRetries) {
-          console.error(
-            `❌ Failed to validate URL ${index} after ${maxRetries} attempts: ${url}`,
+          logger.error(
+            `Failed to validate URL ${index} after ${maxRetries} attempts: ${url}`,
             errorMessage
           );
           return false;
         }
 
-        console.warn(
-          `⚠️ URL validation failed (attempt ${attempt}/${maxRetries}): ${errorMessage}`
+        logger.warn(
+          `URL validation failed (attempt ${attempt}/${maxRetries}): ${errorMessage}`
         );
 
         // Wait before retrying (exponential backoff)
@@ -137,19 +138,19 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
 
   if (validUrls.length < imageUrls.length) {
     const failedCount = imageUrls.length - validUrls.length;
-    console.warn(
-      `⚠️ ${failedCount} out of ${imageUrls.length} images failed validation and will be skipped. Proceeding with ${validUrls.length} valid images.`
+    logger.warn(
+      `${failedCount} out of ${imageUrls.length} images failed validation and will be skipped. Proceeding with ${validUrls.length} valid images.`
     );
 
     // If we have less than half the images, warn the user
     if (validUrls.length < Math.ceil(imageUrls.length / 2)) {
-      console.warn(
-        `⚠️ Warning: Only ${validUrls.length} out of ${imageUrls.length} images are accessible. Results may be incomplete.`
+      logger.warn(
+        `Only ${validUrls.length} out of ${imageUrls.length} images are accessible. Results may be incomplete.`
       );
     }
   }
 
-  console.log(`✅ Proceeding with ${validUrls.length} validated image URLs`);
+  logger.info(`Proceeding with ${validUrls.length} validated image URLs`);
 
   try {
     const messages: any[] = [
@@ -169,7 +170,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       },
     ];
 
-    console.log("🚀 Sending request to OpenAI GPT-4o...");
+    logger.info("Sending request to OpenAI GPT-4o");
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -186,7 +187,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       },
     });
 
-    console.log("✅ OpenAI response received");
+    logger.info("OpenAI response received");
 
     const content = completion.choices[0]?.message?.content;
 
@@ -198,13 +199,13 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       throw new Error("OpenAI returned no choices in response");
     }
 
-    console.log("🔄 Parsing OpenAI JSON response...");
+    logger.debug("Parsing OpenAI JSON response");
 
     let structuredData;
     try {
       structuredData = JSON.parse(content);
     } catch (parseError) {
-      console.error("❌ Failed to parse OpenAI response as JSON:", content);
+      logger.error("Failed to parse OpenAI response as JSON", content);
       throw new Error("OpenAI response is not valid JSON");
     }
 
@@ -212,7 +213,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       throw new Error("OpenAI response does not contain valid structured data");
     }
 
-    console.log("✅ Resume parsing completed successfully");
+    logger.info("Resume parsing completed successfully");
     return structuredData;
   } catch (error) {
     if (error instanceof Error) {
@@ -256,11 +257,11 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
         );
       }
 
-      console.error("❌ OpenAI API error:", error.message);
+      logger.error("OpenAI API error", error.message);
       throw new Error(`Resume parsing failed: ${error.message}`);
     }
 
-    console.error("❌ Unknown error during OpenAI processing:", error);
+    logger.error("Unknown error during OpenAI processing", error);
     throw new Error(
       "Resume parsing failed due to an unexpected error. Please try again."
     );

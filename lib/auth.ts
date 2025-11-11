@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { registerApiSchema } from "@/lib/schemas";
+import { logger } from "./logger";
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
@@ -67,7 +68,7 @@ export async function registerUser(
       data: userWithoutPassword,
     };
   } catch (error) {
-    console.error("REGISTRATION_ERROR", error);
+    logger.error("Registration error", error);
     return {
       success: false,
       error: {

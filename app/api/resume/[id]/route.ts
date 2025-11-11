@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getResumeById, deleteResume } from "@/lib/resume";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _request: NextRequest,
@@ -26,7 +27,7 @@ export async function GET(
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error("Resume fetch API error:", error);
+    logger.error("Resume fetch API error", error);
     return NextResponse.json(
       { message: "Failed to fetch resume" },
       { status: 500 }
@@ -59,7 +60,7 @@ export async function DELETE(
       message: "Resume deleted successfully",
     });
   } catch (error) {
-    console.error("Resume delete API error:", error);
+    logger.error("Resume delete API error", error);
     return NextResponse.json(
       { message: "Failed to delete resume" },
       { status: 500 }

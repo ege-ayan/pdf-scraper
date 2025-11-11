@@ -7,6 +7,7 @@ import {
   ProcessingStep,
 } from "@/types";
 import { MAX_FILE_SIZE } from "./constants";
+import { logger } from "./logger";
 
 export async function pdfToImages(file: File): Promise<Blob[]> {
   const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
@@ -121,7 +122,7 @@ export async function processResumePDF(
 
   try {
     onProgress?.(ProcessingStep.CONVERTING);
-    console.log(
+    logger.info(
       `Starting PDF processing for file: ${file.name} (${file.size} bytes)`
     );
 
@@ -131,12 +132,12 @@ export async function processResumePDF(
       throw new Error("PDF conversion failed: No pages found in PDF");
     }
 
-    console.log(
-      `✅ Successfully converted PDF to ${imageBlobs.length} image blobs`
+    logger.info(
+      `Successfully converted PDF to ${imageBlobs.length} image blobs`
     );
 
     onProgress?.(ProcessingStep.UPLOADING);
-    console.log("Starting image upload process...");
+    logger.info("Starting image upload process");
 
     const uploadedImages = await uploadImagesToStorage(imageBlobs);
 
@@ -145,13 +146,13 @@ export async function processResumePDF(
     }
 
     if (uploadedImages.length !== imageBlobs.length) {
-      console.warn(
-        `Warning: Expected ${imageBlobs.length} uploads but got ${uploadedImages.length}`
+      logger.warn(
+        `Expected ${imageBlobs.length} uploads but got ${uploadedImages.length}`
       );
     }
 
-    console.log(
-      `✅ Successfully uploaded ${uploadedImages.length} images to storage`
+    logger.info(
+      `Successfully uploaded ${uploadedImages.length} images to storage`
     );
 
     onProgress?.(ProcessingStep.READY);
@@ -178,8 +179,8 @@ export async function processResumePDF(
       );
     }
 
-    console.log(
-      `✅ PDF processing completed successfully with ${imageUrls.length} image URLs and ${imagePaths.length} paths`
+    logger.info(
+      `PDF processing completed successfully with ${imageUrls.length} image URLs and ${imagePaths.length} paths`
     );
 
     return {
@@ -187,7 +188,7 @@ export async function processResumePDF(
       imagePaths,
     };
   } catch (error) {
-    console.error("❌ PDF processing failed:", error);
+    logger.error("PDF processing failed", error);
     throw error;
   }
 }

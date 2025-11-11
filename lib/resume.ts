@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { parseResumeWithOpenAI } from "./openai";
 import { deductCredits } from "./stripe";
 import { CREDITS_PER_SCRAPE } from "./constants";
+import { logger } from "./logger";
 import type {
   CreateResumeParams,
   CreateResumeResult,
@@ -34,7 +35,7 @@ export async function getResumeHistory(
       data: resumeHistory,
     };
   } catch (error) {
-    console.error("Fetch resume history error:", error);
+    logger.error("Fetch resume history error", error);
     return {
       success: false,
       error: {
@@ -93,12 +94,12 @@ export async function createResume(
 
     let resumeData;
     if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
-      console.log("Parsing resume with AI...");
+      logger.info("Parsing resume with AI");
       resumeData = await parseResumeWithOpenAI(imageUrls);
-      console.log("Resume parsed successfully");
+      logger.info("Resume parsed successfully");
 
       await deductCredits(userId, CREDITS_PER_SCRAPE);
-      console.log("Credits deducted successfully");
+      logger.info("Credits deducted successfully");
     } else {
       return {
         success: false,
@@ -125,7 +126,7 @@ export async function createResume(
       },
     };
   } catch (error) {
-    console.error("Parse and save resume error:", error);
+    logger.error("Parse and save resume error", error);
     const errorMessage =
       error instanceof Error
         ? error.message
@@ -174,7 +175,7 @@ export async function getResumeById(
       data: resume,
     };
   } catch (error) {
-    console.error("Fetch resume error:", error);
+    logger.error("Fetch resume error", error);
     return {
       success: false,
       error: {
@@ -217,7 +218,7 @@ export async function deleteResume(
       success: true,
     };
   } catch (error) {
-    console.error("Delete resume error:", error);
+    logger.error("Delete resume error", error);
     return {
       success: false,
       error: {

@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
+import { logger } from "./logger";
 import {
   PlanType,
   CreatePortalSessionResult,
@@ -69,13 +70,13 @@ export async function createCheckoutSession(
     limit: 5,
   });
 
-  console.log(
+  logger.info(
     `Found ${existingSubscriptions.data.length} active subscriptions for user ${userId}`
   );
 
   if (existingSubscriptions.data.length > 0) {
     const existingSub = existingSubscriptions.data[0];
-    console.log(`Updating subscription ${existingSub.id} to ${priceId}`);
+    logger.info(`Updating subscription ${existingSub.id} to ${priceId}`);
 
     await stripe.subscriptions.update(existingSub.id, {
       items: [{ id: existingSub.items.data[0].id, price: priceId }],
@@ -104,7 +105,7 @@ export async function createCheckoutSession(
     };
   }
 
-  console.log(`Creating new checkout session for plan: ${planType}`);
+  logger.info(`Creating new checkout session for plan: ${planType}`);
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
@@ -146,8 +147,8 @@ async function createPortalSession(customerId: string) {
 
     return session;
   } catch (error) {
-    console.error(
-      `Portal session creation failed for customer ${customerId}:`,
+    logger.error(
+      `Portal session creation failed for customer ${customerId}`,
       error
     );
     throw error;
@@ -158,57 +159,57 @@ async function handleSubscriptionUpdate(
   customerId: string,
   subscription: Stripe.Subscription
 ) {
-  console.log(`🔄 Processing subscription update: ${subscription.id}`);
+  logger.info(`Processing subscription update: ${subscription.id}`);
 
-  if (!subscription.customer || typeof subscription.customer !== "string") {
-    console.error("❌ Invalid customer ID in subscription.updated");
-    return;
-  }
+    if (!subscription.customer || typeof subscription.customer !== "string") {
+      logger.error("Invalid customer ID in subscription update");
+      return;
+    }
 
-  const user = await prisma.user.findFirst({
-    where: { stripeCustomerId: customerId },
-  });
+    const user = await prisma.user.findFirst({
+      where: { stripeCustomerId: customerId },
+    });
 
-  if (!user) {
-    console.error(`❌ User not found for customer ${customerId}`);
-    return;
-  }
+    if (!user) {
+      logger.error(`User not found for customer ${customerId}`);
+      return;
+    }
 
-  console.log(`✅ Found user: ${user.id} (${user.email})`);
-  console.log(
-    `   Current plan: ${user.planType}, Current credits: ${user.credits}`
-  );
+    logger.debug(`Found user: ${user.id} (${user.email})`);
+    logger.debug(
+      `Current plan: ${user.planType}, Current credits: ${user.credits}`
+    );
 
   const priceId = subscription.items.data[0]?.price.id;
 
   let planType = PlanType.FREE;
   let creditsToAdd = 0;
 
-  if (priceId === STRIPE_PRICES.BASIC) {
-    planType = PlanType.BASIC;
-    if (user.planType !== PlanType.BASIC) {
-      creditsToAdd = PLAN_CREDITS.BASIC;
-      console.log(`📈 Plan changed to BASIC - adding ${creditsToAdd} credits`);
-    } else {
-      console.log(`📈 Plan is already BASIC - no credit change needed`);
-    }
-  } else if (priceId === STRIPE_PRICES.PRO) {
-    planType = PlanType.PRO;
+    if (priceId === STRIPE_PRICES.BASIC) {
+      planType = PlanType.BASIC;
+      if (user.planType !== PlanType.BASIC) {
+        creditsToAdd = PLAN_CREDITS.BASIC;
+        logger.info(`Plan changed to BASIC - adding ${creditsToAdd} credits`);
+      } else {
+        logger.debug(`Plan is already BASIC - no credit change needed`);
+      }
+    } else if (priceId === STRIPE_PRICES.PRO) {
+      planType = PlanType.PRO;
 
-    if (user.planType !== PlanType.PRO) {
-      creditsToAdd = PLAN_CREDITS.PRO;
-      console.log(`📈 Plan changed to PRO - adding ${creditsToAdd} credits`);
+      if (user.planType !== PlanType.PRO) {
+        creditsToAdd = PLAN_CREDITS.PRO;
+        logger.info(`Plan changed to PRO - adding ${creditsToAdd} credits`);
+      } else {
+        logger.debug(`Plan is already PRO - no credit change needed`);
+      }
     } else {
-      console.log(`📈 Plan is already PRO - no credit change needed`);
+      logger.warn(`Unknown price ID: ${priceId} - keeping current plan`);
+      return;
     }
-  } else {
-    console.log(`❓ Unknown price ID: ${priceId} - keeping current plan`);
-    return;
-  }
 
   if (creditsToAdd > 0 || user.planType !== planType) {
     const newCredits = user.credits + creditsToAdd;
-    console.log(
+    logger.info(
       `Updating user ${user.id}: plan ${user.planType} → ${planType}, credits ${user.credits} + ${creditsToAdd} = ${newCredits}`
     );
 
@@ -220,11 +221,11 @@ async function handleSubscriptionUpdate(
       },
     });
 
-    console.log(
-      `✅ Updated user ${user.id}: plan=${planType}, credits=${newCredits}`
+    logger.info(
+      `Updated user ${user.id}: plan=${planType}, credits=${newCredits}`
     );
   } else {
-    console.log(`ℹ️ No changes needed for user ${user.id}`);
+    logger.debug(`No changes needed for user ${user.id}`);
   }
 }
 
@@ -234,12 +235,12 @@ async function handleSubscriptionDelete(customerId: string) {
   });
 
   if (!user) {
-    console.error(`User not found for customer ${customerId}`);
+    logger.error(`User not found for customer ${customerId}`);
     return;
   }
 
-  console.log(
-    `🗑️ Subscription cancelled for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`
+  logger.info(
+    `Subscription cancelled for user ${user.id}: plan=${user.planType} → FREE, credits=${user.credits} → 0`
   );
 
   await prisma.user.update({
@@ -250,8 +251,8 @@ async function handleSubscriptionDelete(customerId: string) {
     },
   });
 
-  console.log(
-    `✅ Cancelled subscription for user ${user.id}: FREE plan with 0 credits`
+  logger.info(
+    `Cancelled subscription for user ${user.id}: FREE plan with 0 credits`
   );
 }
 
@@ -281,15 +282,15 @@ export async function deductCredits(
           "No active subscription found. Please renew your subscription to continue using the service."
         );
       }
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes("active subscription")
-      ) {
-        throw error;
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message.includes("active subscription")
+        ) {
+          throw error;
+        }
+        logger.error("Error checking subscription status", error);
       }
-      console.error("Error checking subscription status:", error);
-    }
   }
 
   if (user.credits < amount) {
@@ -343,7 +344,7 @@ export async function createPortalSessionForUser(
       },
     };
   } catch (error: any) {
-    console.error("Portal session creation error:", error);
+    logger.error("Portal session creation error", error);
 
     if (error.message?.includes("No active subscriptions found")) {
       return {
@@ -370,20 +371,20 @@ async function handleSubscriptionUpdatedWebhook(
   subscription: Stripe.Subscription
 ): Promise<boolean> {
   try {
-    console.log(`🔄 Processing subscription update: ${subscription.id}`);
+    logger.info(`Processing subscription update: ${subscription.id}`);
 
     if (!subscription.customer || typeof subscription.customer !== "string") {
-      console.error("❌ Invalid customer ID in subscription.updated");
+      logger.error("Invalid customer ID in subscription update");
       return false;
     }
 
     await handleSubscriptionUpdate(subscription.customer, subscription);
 
-    console.log(`✅ Subscription updated: ${subscription.id}`);
+    logger.info(`Subscription updated: ${subscription.id}`);
     return true;
   } catch (error) {
-    console.error(
-      `❌ Failed to process subscription update: ${subscription.id}`,
+    logger.error(
+      `Failed to process subscription update: ${subscription.id}`,
       error
     );
     return false;
@@ -394,20 +395,20 @@ async function handleSubscriptionDeletedWebhook(
   subscription: Stripe.Subscription
 ): Promise<boolean> {
   try {
-    console.log(`🗑️ Processing subscription deletion: ${subscription.id}`);
+    logger.info(`Processing subscription deletion: ${subscription.id}`);
 
     if (!subscription.customer || typeof subscription.customer !== "string") {
-      console.error("❌ Invalid customer ID in subscription.deleted");
+      logger.error("Invalid customer ID in subscription deletion");
       return false;
     }
 
     await handleSubscriptionDelete(subscription.customer);
 
-    console.log(`✅ Subscription deactivated: ${subscription.id}`);
+    logger.info(`Subscription deactivated: ${subscription.id}`);
     return true;
   } catch (error) {
-    console.error(
-      `❌ Failed to process subscription deletion: ${subscription.id}`,
+    logger.error(
+      `Failed to process subscription deletion: ${subscription.id}`,
       error
     );
     return false;
@@ -417,12 +418,12 @@ async function handleSubscriptionDeletedWebhook(
 async function handleInvoicePaidWebhook(
   invoice: Stripe.Invoice
 ): Promise<boolean> {
-  console.log(
-    `💰 Processing invoice payment - activating subscription and adding credits: ${invoice.id}`
+  logger.info(
+    `Processing invoice payment - activating subscription and adding credits: ${invoice.id}`
   );
 
   if (!invoice.customer || typeof invoice.customer !== "string") {
-    console.error("❌ Invalid customer ID in invoice.paid");
+    logger.error("Invalid customer ID in invoice payment");
     return false;
   }
 
@@ -437,8 +438,8 @@ async function handleInvoicePaidWebhook(
   }
 
   if (!subscriptionId) {
-    console.log(
-      `🔍 No subscription reference in invoice, searching for active subscriptions...`
+    logger.info(
+      `No subscription reference in invoice, searching for active subscriptions`
     );
 
     try {
@@ -450,29 +451,29 @@ async function handleInvoicePaidWebhook(
 
       if (subscriptions.data.length > 0) {
         subscriptionId = subscriptions.data[0].id;
-        console.log(`✅ Found active subscription: ${subscriptionId}`);
+        logger.info(`Found active subscription: ${subscriptionId}`);
       } else {
-        console.log(`⚠️ No active subscriptions found for customer`);
+        logger.warn(`No active subscriptions found for customer`);
         return true;
       }
     } catch (error) {
-      console.error(`❌ Error searching for subscriptions:`, error);
+      logger.error(`Error searching for subscriptions`, error);
       return false;
     }
   }
 
-  console.log(
-    `📋 Processing subscription ${subscriptionId} for invoice ${invoice.id}`
+  logger.info(
+    `Processing subscription ${subscriptionId} for invoice ${invoice.id}`
   );
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  console.log(
-    `📄 Subscription status: ${subscription.status}, plan: ${subscription.items.data[0]?.price.id}`
+  logger.debug(
+    `Subscription status: ${subscription.status}, plan: ${subscription.items.data[0]?.price.id}`
   );
 
   await handleSubscriptionUpdate(invoice.customer, subscription);
 
-  console.log(`✅ Subscription activated and credits added: ${invoice.id}`);
+  logger.info(`Subscription activated and credits added: ${invoice.id}`);
   return true;
 }
 
@@ -496,7 +497,7 @@ export async function processWebhookEvent(
       );
 
     default:
-      console.log(`⚠️ Unhandled event type: ${event.type}`);
+      logger.warn(`Unhandled event type: ${event.type}`);
       return false;
   }
 }

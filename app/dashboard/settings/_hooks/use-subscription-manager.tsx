@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
 import { PlanType } from "@/types";
+import { logger } from "@/lib/logger";
 
 export interface UserCredits {
   credits: number;
@@ -42,7 +43,7 @@ export function useSubscriptionManager({
       const response = await axios.get("/api/user/credits");
       setUserCredits(response.data);
     } catch (error) {
-      console.error("Failed to fetch user credits:", error);
+      logger.error("Failed to fetch user credits", error);
       toast.error("Failed to load subscription information");
     } finally {
       setLoading(false);
@@ -76,7 +77,7 @@ export function useSubscriptionManager({
 
           setUserCredits(freshCredits);
         } catch (error) {
-          console.error("Failed to refresh credits after subscription:", error);
+          logger.error("Failed to refresh credits after subscription", error);
           toast.success("Subscription processed! Credits will update shortly.");
         }
 
@@ -111,7 +112,7 @@ export function useSubscriptionManager({
       const { url } = response.data;
       router.push(url);
     } catch (error) {
-      console.error("Checkout error:", error);
+      logger.error("Checkout error", error);
 
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.message || error.message;
@@ -131,7 +132,7 @@ export function useSubscriptionManager({
       const { url } = response.data;
       router.push(url);
     } catch (error: any) {
-      console.error("Portal error:", error);
+      logger.error("Portal error", error);
 
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;

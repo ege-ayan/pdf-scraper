@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createPortalSessionForUser } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -21,7 +22,7 @@ export async function POST() {
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error("Portal session creation API error:", error);
+    logger.error("Portal session creation API error", error);
     return NextResponse.json(
       { message: "Failed to create portal session" },
       { status: 500 }

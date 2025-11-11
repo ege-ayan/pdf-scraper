@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface UseResumeDetailProps {
   resumeId: string;
@@ -43,7 +44,7 @@ export function useResumeDetail({ resumeId }: UseResumeDetailProps) {
       // Invalidate the history query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["resume-history"] });
     } catch (error) {
-      console.error("Delete error:", error);
+      logger.error("Delete error", error);
       toast.error("Failed to delete resume");
     } finally {
       setIsDeleting(false);

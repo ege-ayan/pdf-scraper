@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,7 @@ export default function HistoryCard({ item, onDelete }: HistoryCardProps) {
       setShowDeleteConfirm(false);
     } catch (error) {
       // Error is already handled by the hook with toast
-      console.error("Delete failed:", error);
+      logger.error("Delete failed", error);
     } finally {
       setIsDeleting(false);
     }

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { type UploadedImage } from "@/types";
+import { logger } from "./logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
@@ -50,7 +51,7 @@ export async function uploadImageToStorage(blob: Blob): Promise<UploadedImage> {
       path: filePath,
     };
   } catch (error) {
-    console.error("Image upload error:", error);
+    logger.error("Image upload error", error);
     throw error;
   }
 }
@@ -64,7 +65,7 @@ export async function uploadImagesToStorage(
     const results = await Promise.all(uploadPromises);
     return results;
   } catch (error) {
-    console.error("Multiple image upload error:", error);
+    logger.error("Multiple image upload error", error);
     throw error;
   }
 }

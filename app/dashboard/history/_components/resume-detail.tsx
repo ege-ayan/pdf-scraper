@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -50,7 +51,7 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
       await deleteResume(resumeId);
       router.push("/dashboard/history");
     } catch (error) {
-      console.error("Delete failed:", error);
+      logger.error("Delete failed", error);
     } finally {
       setIsDeleting(false);
     }

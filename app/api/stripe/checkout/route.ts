@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { createCheckoutSession } from "@/lib/stripe";
 import { STRIPE_PRICES } from "@/lib/constants";
 import { PlanType } from "@/types";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error("Checkout session creation error:", error);
+    logger.error("Checkout session creation error", error);
     return NextResponse.json(
       { message: "Failed to create checkout session" },
       { status: 500 }

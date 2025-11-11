@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getResumeHistory, createResume } from "@/lib/resume";
+import { logger } from "@/lib/logger";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error("Resume history API error:", error);
+    logger.error("Resume history API error", error);
     return NextResponse.json(
       { message: "Failed to fetch resume history" },
       { status: 500 }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result.data);
   } catch (error) {
-    console.error("Resume creation API error:", error);
+    logger.error("Resume creation API error", error);
     return NextResponse.json(
       { message: "Failed to create resume" },
       { status: 500 }

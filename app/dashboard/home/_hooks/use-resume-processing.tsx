@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserCredits } from "./use-user-credits";
 import { processResumePDF } from "@/lib/pdf-utils";
+import { logger } from "@/lib/logger";
 import { ProcessingStep, ErrorType, UseResumeProcessingReturn } from "@/types";
 import { CREDITS_PER_SCRAPE, MAX_FILE_SIZE } from "@/lib/constants";
 
@@ -17,7 +18,7 @@ function useResumeParser(onProgress?: (step: ProcessingStep) => void) {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-      console.error("Resume processing error:", error);
+      logger.error("Resume processing error", error);
     },
   });
 }
@@ -65,7 +66,7 @@ function useResumeScraper() {
     },
     onSuccess: () => {
       toast.success("Resume scraped and saved successfully!");
-      console.log("Resume scraping complete");
+      logger.info("Resume scraping complete");
     },
     onError: (error: any) => {
       if (error?.type === ErrorType.INSUFFICIENT_CREDITS) {
@@ -83,7 +84,7 @@ function useResumeScraper() {
             : "Failed to scrape resume. Please try again."
         );
       }
-      console.error("Resume scraping error:", error);
+      logger.error("Resume scraping error", error);
     },
   });
 }
@@ -179,7 +180,7 @@ export function useResumeProcessing(): UseResumeProcessingReturn {
 
       // Invalidate resume history cache to show the new resume
       queryClient.invalidateQueries({ queryKey: ["resume-history"] });
-      console.log("✅ Invalidated resume history cache");
+      logger.debug("Invalidated resume history cache");
     } catch (error) {
       setCurrentStep(ProcessingStep.IDLE);
       throw error;
