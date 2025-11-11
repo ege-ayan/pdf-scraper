@@ -12,27 +12,45 @@ import type {
 } from "@/types/resume";
 
 export async function getResumeHistory(
-  userId: string
+  userId: string,
+  page: number = 1,
+  limit: number = 6
 ): Promise<GetResumeHistoryResult> {
   try {
-    const resumeHistory = await prisma.resumeHistory.findMany({
-      where: {
-        userId,
-      },
-      orderBy: {
-        uploadedAt: "desc",
-      },
-      select: {
-        id: true,
-        fileName: true,
-        uploadedAt: true,
-        resumeData: true,
-      },
-    });
+    const skip = (page - 1) * limit;
+
+    const [resumeHistory, totalCount] = await Promise.all([
+      prisma.resumeHistory.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          uploadedAt: "desc",
+        },
+        select: {
+          id: true,
+          fileName: true,
+          uploadedAt: true,
+          resumeData: true,
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.resumeHistory.count({
+        where: {
+          userId,
+        },
+      }),
+    ]);
 
     return {
       success: true,
-      data: resumeHistory,
+      data: {
+        items: resumeHistory,
+        totalCount,
+        hasNextPage: skip + limit < totalCount,
+        nextPage: skip + limit < totalCount ? page + 1 : null,
+      },
     };
   } catch (error) {
     logger.error("Fetch resume history error", error);

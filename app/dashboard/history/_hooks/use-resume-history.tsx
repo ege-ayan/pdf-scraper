@@ -1,42 +1,28 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 
-interface ResumeHistoryItem {
-  id: string;
-  fileName: string;
-  uploadedAt: string;
-  resumeData: {
-    profile: {
-      name: string;
-      surname: string;
-      email: string;
-      headline: string;
-    };
-    workExperiences: Array<{
-      jobTitle: string;
-      company: string;
-      employmentType: string;
-      current: boolean;
-    }>;
-    educations: Array<{
-      school: string;
-      degree: string;
-      major: string;
-    }>;
-    skills: string[];
-  };
-}
+const PAGE_SIZE = 6;
 
 export function useResumeHistory() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["resume-history"],
-    queryFn: async (): Promise<ResumeHistoryItem[]> => {
-      const response = await axios.get("/api/resume");
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await axios.get(
+        `/api/resume?page=${pageParam}&limit=${PAGE_SIZE}`
+      );
       return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasNextPage ? lastPage.nextPage : undefined;
+    },
+    initialPageParam: 1,
   });
 }
 

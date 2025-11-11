@@ -136,7 +136,12 @@ export interface CreateResumeResult {
 
 export interface GetResumeHistoryResult {
   success: boolean;
-  data?: ResumeHistoryItem[];
+  data?: {
+    items: ResumeHistoryItem[];
+    totalCount: number;
+    hasNextPage: boolean;
+    nextPage: number | null;
+  };
   error?: {
     message: string;
     status: number;

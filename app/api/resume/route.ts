@@ -4,14 +4,18 @@ import { authOptions } from "@/lib/auth";
 import { getResumeHistory, createResume } from "@/lib/resume";
 import { logger } from "@/lib/logger";
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await getResumeHistory(session.user.id);
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "6");
+
+    const result = await getResumeHistory(session.user.id, page, limit);
 
     if (!result.success) {
       return NextResponse.json(

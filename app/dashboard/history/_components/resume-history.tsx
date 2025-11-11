@@ -1,13 +1,11 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
-import {
-  useResumeHistory,
-  useDeleteResume,
-} from "../_hooks/use-resume-history";
+import { useResumeHistory } from "../_hooks/use-resume-history";
 import HistoryCard from "./history-card";
 
 export interface ResumeHistoryItem {
@@ -18,7 +16,36 @@ export interface ResumeHistoryItem {
 }
 
 export default function ResumeHistory() {
-  const { data: history, isLoading, error } = useResumeHistory();
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useResumeHistory();
+
+  const history = data?.pages.flatMap((page) => page.items) || [];
+  const totalCount = data?.pages[0]?.totalCount || 0;
+
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) {
     return (
@@ -72,7 +99,7 @@ export default function ResumeHistory() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {history.length} resume{history.length !== 1 ? "s" : ""} uploaded
+          {totalCount} resume{totalCount !== 1 ? "s" : ""} uploaded
         </p>
       </div>
 
@@ -80,6 +107,17 @@ export default function ResumeHistory() {
         {history.map((item: ResumeHistoryItem) => (
           <HistoryCard key={item.id} item={item} />
         ))}
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="ml-2 text-sm text-muted-foreground">
+              Loading more resumes...
+            </span>
+          </div>
+        )}
+
+        <div ref={loadMoreRef} className="h-4" />
       </div>
     </div>
   );
