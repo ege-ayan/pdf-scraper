@@ -161,51 +161,51 @@ async function handleSubscriptionUpdate(
 ) {
   logger.info(`Processing subscription update: ${subscription.id}`);
 
-    if (!subscription.customer || typeof subscription.customer !== "string") {
+  if (!subscription.customer || typeof subscription.customer !== "string") {
       logger.error("Invalid customer ID in subscription update");
-      return;
-    }
+    return;
+  }
 
-    const user = await prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
+  const user = await prisma.user.findFirst({
+    where: { stripeCustomerId: customerId },
+  });
 
-    if (!user) {
+  if (!user) {
       logger.error(`User not found for customer ${customerId}`);
-      return;
-    }
+    return;
+  }
 
     logger.debug(`Found user: ${user.id} (${user.email})`);
     logger.debug(
       `Current plan: ${user.planType}, Current credits: ${user.credits}`
-    );
+  );
 
   const priceId = subscription.items.data[0]?.price.id;
 
   let planType = PlanType.FREE;
   let creditsToAdd = 0;
 
-    if (priceId === STRIPE_PRICES.BASIC) {
-      planType = PlanType.BASIC;
-      if (user.planType !== PlanType.BASIC) {
-        creditsToAdd = PLAN_CREDITS.BASIC;
+  if (priceId === STRIPE_PRICES.BASIC) {
+    planType = PlanType.BASIC;
+    if (user.planType !== PlanType.BASIC) {
+      creditsToAdd = PLAN_CREDITS.BASIC;
         logger.info(`Plan changed to BASIC - adding ${creditsToAdd} credits`);
-      } else {
-        logger.debug(`Plan is already BASIC - no credit change needed`);
-      }
-    } else if (priceId === STRIPE_PRICES.PRO) {
-      planType = PlanType.PRO;
-
-      if (user.planType !== PlanType.PRO) {
-        creditsToAdd = PLAN_CREDITS.PRO;
-        logger.info(`Plan changed to PRO - adding ${creditsToAdd} credits`);
-      } else {
-        logger.debug(`Plan is already PRO - no credit change needed`);
-      }
     } else {
-      logger.warn(`Unknown price ID: ${priceId} - keeping current plan`);
-      return;
+        logger.debug(`Plan is already BASIC - no credit change needed`);
     }
+  } else if (priceId === STRIPE_PRICES.PRO) {
+    planType = PlanType.PRO;
+
+    if (user.planType !== PlanType.PRO) {
+      creditsToAdd = PLAN_CREDITS.PRO;
+        logger.info(`Plan changed to PRO - adding ${creditsToAdd} credits`);
+    } else {
+        logger.debug(`Plan is already PRO - no credit change needed`);
+    }
+  } else {
+      logger.warn(`Unknown price ID: ${priceId} - keeping current plan`);
+    return;
+  }
 
   if (creditsToAdd > 0 || user.planType !== planType) {
     const newCredits = user.credits + creditsToAdd;
@@ -282,15 +282,15 @@ export async function deductCredits(
           "No active subscription found. Please renew your subscription to continue using the service."
         );
       }
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message.includes("active subscription")
-        ) {
-          throw error;
-        }
-        logger.error("Error checking subscription status", error);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("active subscription")
+      ) {
+        throw error;
       }
+        logger.error("Error checking subscription status", error);
+    }
   }
 
   if (user.credits < amount) {

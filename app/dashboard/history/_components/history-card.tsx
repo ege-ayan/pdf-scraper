@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { logger } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -16,35 +15,31 @@ import { Calendar, Eye, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import RawDataDialog from "./raw-data-dialog";
 import { ResumeHistoryItem } from "./resume-history";
+import { useDeleteResume } from "../_hooks/use-resume-history";
 
 interface HistoryCardProps {
   item: ResumeHistoryItem;
-  onDelete: (id: string) => void;
 }
 
-export default function HistoryCard({ item, onDelete }: HistoryCardProps) {
+export default function HistoryCard({ item }: HistoryCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { mutateAsync: deleteResume, isPending } = useDeleteResume();
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
-    setIsDeleting(true);
     try {
-      await onDelete(item.id);
+      await deleteResume(item.id);
       setShowDeleteConfirm(false);
     } catch (error) {
-      // Error is already handled by the hook with toast
-      logger.error("Delete failed", error);
-    } finally {
-      setIsDeleting(false);
+      // Error is handled in the hook
     }
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card>
       <CardContent className="p-6">
         <div className="flex justify-between items-center">
           <div className="flex-1">
@@ -66,7 +61,12 @@ export default function HistoryCard({ item, onDelete }: HistoryCardProps) {
               resumeData={item.resumeData}
             />
 
-            <Button variant="outline" size="sm" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="cursor-pointer"
+            >
               <Link href={`/dashboard/history/${item.id}`}>
                 <Eye className="h-4 w-4 mr-1" />
                 View Details
@@ -77,38 +77,51 @@ export default function HistoryCard({ item, onDelete }: HistoryCardProps) {
               variant="destructive"
               size="sm"
               onClick={handleDeleteClick}
+              disabled={isPending}
+              className="cursor-pointer"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </>
+              )}
             </Button>
           </div>
         </div>
       </CardContent>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Resume</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete <strong>{item.fileName}</strong>?
-              This action cannot be undone and all extracted data will be permanently removed.
+              This action cannot be undone and all extracted data will be
+              permanently removed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
-              disabled={isDeleting}
+              disabled={isPending}
+              className="cursor-pointer"
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
-              disabled={isDeleting}
+              disabled={isPending}
+              className="cursor-pointer"
             >
-              {isDeleting ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...

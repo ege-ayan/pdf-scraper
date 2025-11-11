@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    logger.webhook(event.type, event.id, false); // false because we don't know result yet
+    logger.webhook(event.type, event.id, false);
 
     const result = await processWebhookEvent(event);
 

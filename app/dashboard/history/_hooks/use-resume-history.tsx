@@ -43,16 +43,16 @@ export function useResumeHistory() {
 export function useDeleteResume() {
   const queryClient = useQueryClient();
 
-  const deleteResume = async (id: string) => {
-    try {
+  return useMutation({
+    mutationFn: async (id: string) => {
       await axios.delete(`/api/resume/${id}`);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["resume-history"] });
       toast.success("Resume deleted successfully");
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to delete resume");
-      throw error; // Re-throw so the UI can handle it
-    }
-  };
-
-  return { deleteResume };
+    },
+  });
 }

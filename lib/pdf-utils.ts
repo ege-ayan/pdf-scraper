@@ -56,7 +56,7 @@ export async function pdfToImages(file: File): Promise<Blob[]> {
                 }
               },
               "image/jpeg",
-              0.8 // Reduced quality from 1.0 to 0.8 for better compression while maintaining readability
+              0.8
             );
           });
 

@@ -35,7 +35,7 @@ export async function uploadImageToStorage(blob: Blob): Promise<UploadedImage> {
 
     const { data: signedUrlData, error: signedUrlError } =
       await supabase.storage
-        .from(bucketName)
+      .from(bucketName)
         .createSignedUrl(filePath, signedUrlDuration);
 
     if (signedUrlError || !signedUrlData?.signedUrl) {

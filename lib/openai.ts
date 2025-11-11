@@ -4,7 +4,7 @@ import { logger } from "./logger";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 120000, // 2 minutes timeout for API calls
+  timeout: 120000,
   maxRetries: 3,
 });
 
@@ -23,9 +23,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
     );
   }
 
-  logger.info(
-    `Starting AI resume parsing for ${imageUrls.length} images`
-  );
+  logger.info(`Starting AI resume parsing for ${imageUrls.length} images`);
 
   const validateImageUrl = async (
     url: string,
@@ -47,7 +45,7 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
 
         const response = await fetch(url, {
           method: "HEAD",
-          signal: AbortSignal.timeout(10000), // Increased timeout to 10 seconds
+          signal: AbortSignal.timeout(10000),
           headers: {
             "User-Agent": "Mozilla/5.0 (compatible; ResumeParser/1.0)",
           },
@@ -58,30 +56,26 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
             `URL not accessible: ${url} - Status: ${response.status} (attempt ${attempt})`
           );
 
-          // If it's the last attempt, return false
           if (attempt === maxRetries) {
             return false;
           }
 
-          // Wait before retrying (exponential backoff)
           await new Promise((resolve) =>
             setTimeout(resolve, Math.pow(2, attempt) * 1000)
           );
           continue;
         }
 
-        // Check content type to ensure it's an image
         const contentType = response.headers.get("content-type");
         if (contentType && !contentType.startsWith("image/")) {
           logger.warn(`URL does not point to an image: ${contentType}`);
           return false;
         }
 
-        // Check content length to ensure image is not too large (max 20MB for OpenAI)
         const contentLength = response.headers.get("content-length");
         if (contentLength) {
           const sizeInBytes = parseInt(contentLength, 10);
-          const maxSizeBytes = 20 * 1024 * 1024; // 20MB
+          const maxSizeBytes = 20 * 1024 * 1024;
 
           if (sizeInBytes > maxSizeBytes) {
             logger.warn(
@@ -113,7 +107,6 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
           `URL validation failed (attempt ${attempt}/${maxRetries}): ${errorMessage}`
         );
 
-        // Wait before retrying (exponential backoff)
         await new Promise((resolve) =>
           setTimeout(resolve, Math.pow(2, attempt) * 1000)
         );
@@ -142,7 +135,6 @@ export async function parseResumeWithOpenAI(imageUrls: string[]): Promise<any> {
       `${failedCount} out of ${imageUrls.length} images failed validation and will be skipped. Proceeding with ${validUrls.length} valid images.`
     );
 
-    // If we have less than half the images, warn the user
     if (validUrls.length < Math.ceil(imageUrls.length / 2)) {
       logger.warn(
         `Only ${validUrls.length} out of ${imageUrls.length} images are accessible. Results may be incomplete.`

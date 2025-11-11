@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { logger } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +23,10 @@ import LicensesSection from "./sections/licenses-section";
 import AchievementsSection from "./sections/achievements-section";
 import PublicationsSection from "./sections/publications-section";
 import HonorsSection from "./sections/honors-section";
-import ResumeRawDataDialog from "./resume-raw-data-dialog";
+import RawDataDialog from "./raw-data-dialog";
 import { useResumeDetail } from "../_hooks/use-resume-detail";
 import { useDeleteResume } from "../_hooks/use-resume-history";
+import { logger } from "@/lib/logger";
 
 interface ResumeDetailProps {
   resumeId: string;
@@ -37,23 +37,20 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
   const { resumeData, isLoading, isError, error } = useResumeDetail({
     resumeId,
   });
-  const { deleteResume } = useDeleteResume();
+  const { mutateAsync: deleteResume, isPending: isDeleting } =
+    useDeleteResume();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
-    setIsDeleting(true);
     try {
       await deleteResume(resumeId);
       router.push("/dashboard/history");
     } catch (error) {
-      logger.error("Delete failed", error);
-    } finally {
-      setIsDeleting(false);
+      logger.error("Error deleting resume", error);
     }
   };
 
@@ -105,21 +102,36 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
   return (
     <div className="mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="outline" asChild className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          asChild
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <Link href="/dashboard/history">
             <ArrowLeft className="h-4 w-4" />
             Back to History
           </Link>
         </Button>
         <div className="flex gap-2">
-          <ResumeRawDataDialog resumeId={resumeId} resumeData={resumeData} />
+          <RawDataDialog resumeData={resumeData} />
           <Button
             variant="destructive"
+            size="sm"
             onClick={handleDeleteClick}
-            className="flex items-center gap-2"
+            disabled={isDeleting}
+            className="flex items-center gap-2 cursor-pointer"
           >
-            <Trash2 className="h-4 w-4" />
-            Delete
+            {isDeleting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -148,8 +160,8 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
           <DialogHeader>
             <DialogTitle>Delete Resume</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this resume?
-              This action cannot be undone and all extracted data will be permanently removed.
+              Are you sure you want to delete this resume? This action cannot be
+              undone and all extracted data will be permanently removed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -157,6 +169,7 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
               variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isDeleting}
+              className="cursor-pointer"
             >
               Cancel
             </Button>
@@ -164,6 +177,7 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
+              className="cursor-pointer"
             >
               {isDeleting ? (
                 <>

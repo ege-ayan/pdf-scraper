@@ -19,7 +19,6 @@ export interface ResumeHistoryItem {
 
 export default function ResumeHistory() {
   const { data: history, isLoading, error } = useResumeHistory();
-  const { deleteResume } = useDeleteResume();
 
   if (isLoading) {
     return (
@@ -79,7 +78,7 @@ export default function ResumeHistory() {
 
       <div className="grid gap-4">
         {history.map((item: ResumeHistoryItem) => (
-          <HistoryCard key={item.id} item={item} onDelete={deleteResume} />
+          <HistoryCard key={item.id} item={item} />
         ))}
       </div>
     </div>

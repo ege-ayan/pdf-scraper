@@ -22,7 +22,7 @@ export interface UseSubscriptionManagerReturn {
   userCredits: UserCredits | null;
   loading: boolean;
   checkoutLoading: string | null;
-  handleSubscribe: (planType: PlanType.BASIC | PlanType.PRO) => Promise<void>;
+  handleSubscribe: (planType: PlanType) => Promise<void>;
   handleManageBilling: () => Promise<void>;
   refreshCredits: () => Promise<void>;
 }
@@ -97,7 +97,7 @@ export function useSubscriptionManager({
     fetchUserCredits();
   }, []);
 
-  const handleSubscribe = async (planType: PlanType.BASIC | PlanType.PRO) => {
+  const handleSubscribe = async (planType: PlanType) => {
     if (!session?.user?.id) {
       toast.error("You must be logged in to subscribe");
       return;

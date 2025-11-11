@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FileText } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -49,7 +50,14 @@ export default function RegisterForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center from-background to-muted p-4">
-      <Card className="w-full max-w-md shadow-lg">
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex justify-center">
+          <Link href="/dashboard/home" className="flex items-center space-x-3">
+            <FileText className="h-10 w-10 text-primary" />
+            <span className="text-3xl font-bold">PDF Scraper</span>
+          </Link>
+        </div>
+        <Card className="shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
             Create Account
@@ -156,6 +164,7 @@ export default function RegisterForm() {
           </form>
         </Form>
       </Card>
+      </div>
     </div>
   );
 }
