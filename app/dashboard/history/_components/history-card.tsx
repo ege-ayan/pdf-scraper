@@ -40,22 +40,24 @@ export default function HistoryCard({ item }: HistoryCardProps) {
 
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center">
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-1">{item.fileName}</h3>
+      <CardContent className="p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg mb-1 truncate">{item.fileName}</h3>
             <div className="flex items-center text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4 mr-1" />
-              {new Date(item.uploadedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+              <span className="truncate">
+                {new Date(item.uploadedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 md:flex-row md:gap-2">
             <RawDataDialog
               fileName={item.fileName}
               resumeData={item.resumeData}
@@ -65,11 +67,12 @@ export default function HistoryCard({ item }: HistoryCardProps) {
               variant="outline"
               size="sm"
               asChild
-              className="cursor-pointer"
+              className="cursor-pointer w-full sm:w-auto"
             >
               <Link href={`/dashboard/history/${item.id}`}>
                 <Eye className="h-4 w-4 mr-1" />
-                View Details
+                <span className="hidden sm:inline">View Details</span>
+                <span className="sm:hidden">View</span>
               </Link>
             </Button>
 
@@ -78,17 +81,19 @@ export default function HistoryCard({ item }: HistoryCardProps) {
               size="sm"
               onClick={handleDeleteClick}
               disabled={isPending}
-              className="cursor-pointer"
+              className="cursor-pointer w-full sm:w-auto"
             >
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  Deleting...
+                  <span className="hidden sm:inline">Deleting...</span>
+                  <span className="sm:hidden">Deleting</span>
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
+                  <span className="hidden sm:inline">Delete</span>
+                  <span className="sm:hidden">Delete</span>
                 </>
               )}
             </Button>

@@ -229,7 +229,8 @@ export function PlanCards({
     if (currentPlan === PlanType.FREE) {
       onSubscribe(planType);
     } else {
-      setConfirmUpgrade({ planType, open: true });
+      const targetPlan = planType === PlanType.BASIC ? PlanType.PRO : planType;
+      setConfirmUpgrade({ planType: targetPlan, open: true });
     }
   };
 

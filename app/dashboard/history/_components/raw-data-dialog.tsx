@@ -46,7 +46,7 @@ export default function RawDataDialog({
       </DialogTrigger>
       <DialogContent
         className="overflow-y-auto"
-        style={{ width: '80vw', height: '85vh', maxWidth: 'none' }}
+        style={{ width: '95vw', height: '85vh', maxWidth: 'none' }}
       >
         <DialogHeader>
           <DialogTitle>Raw Resume Data - {displayTitle}</DialogTitle>

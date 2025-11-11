@@ -101,25 +101,25 @@ export default function ResumeDetail({ resumeId }: ResumeDetailProps) {
 
   return (
     <div className="mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <Button
           variant="outline"
           asChild
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer w-full md:w-auto"
         >
           <Link href="/dashboard/history">
             <ArrowLeft className="h-4 w-4" />
             Back to History
           </Link>
         </Button>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 md:flex-row">
           <RawDataDialog resumeData={resumeData} />
           <Button
             variant="destructive"
             size="sm"
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer w-full md:w-auto"
           >
             {isDeleting ? (
               <>
