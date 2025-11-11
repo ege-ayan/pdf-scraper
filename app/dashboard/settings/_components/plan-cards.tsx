@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -32,7 +31,7 @@ import { CREDITS_PER_SCRAPE, PLAN_CREDITS } from "@/lib/constants";
 interface PlanCardProps {
   planType: PlanType;
   isCurrentPlan?: boolean;
-  isCompact?: boolean; // For side-by-side layout
+  isCompact?: boolean;
   checkoutLoading: string | null;
   onSubscribe?: (planType: PlanType) => void;
   onUpgrade?: (planType: PlanType) => void;
@@ -138,7 +137,6 @@ function PlanCard({
         </ul>
         <div className={isCompact ? "mt-auto" : "space-y-2"}>
           {isCurrentPlan ? (
-            // Current plan - show upgrade/manage buttons
             planType === PlanType.BASIC ? (
               <div className="flex flex-col md:flex-row gap-2 md:gap-4">
                 <Button
@@ -168,7 +166,6 @@ function PlanCard({
                 </Button>
               </div>
             ) : (
-              // Pro plan current
               <div className="flex justify-center">
                 <Button
                   className="w-full md:w-auto"
@@ -181,7 +178,6 @@ function PlanCard({
               </div>
             )
           ) : (
-            // Not current plan - show subscribe button
             <div className="flex justify-center">
               <Button
                 className={`w-full md:w-auto ${
@@ -278,7 +274,6 @@ export function PlanCards({
         />
       )}
 
-      {/* Upgrade Confirmation Modal */}
       <Dialog
         open={confirmUpgrade?.open}
         onOpenChange={(open) => setConfirmUpgrade(open ? confirmUpgrade : null)}
@@ -288,7 +283,6 @@ export function PlanCards({
             <DialogTitle>Confirm Plan Upgrade</DialogTitle>
             <div className="text-muted-foreground text-sm space-y-4">
               {currentPlan === PlanType.FREE ? (
-                // FREE to BASIC/PRO subscription
                 confirmUpgrade?.planType === PlanType.PRO ? (
                   <>
                     <p>You're about to subscribe to the Pro plan.</p>
