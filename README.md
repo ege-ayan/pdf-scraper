@@ -129,3 +129,119 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+## Stripe Setup (Test Mode)
+
+### 1. Create a Stripe Test Account
+
+1. Go to [stripe.com](https://stripe.com) and create a new account
+2. Switch to **Test Mode** in the dashboard (toggle in the top right)
+3. Note: All operations must remain in test mode - no live transactions
+
+### 2. Get API Keys
+
+- Navigate to **Developers > API keys** in your Stripe dashboard
+- Copy your **Publishable key** (starts with `pk_test_`)
+- Copy your **Secret key** (starts with `sk_test_`)
+
+### 3. Create Products and Prices
+
+1. Go to **Products** in your Stripe dashboard
+2. Create two products:
+
+   **Basic Plan**
+
+   - Name: "Basic Plan"
+   - Price: $10/month
+   - Description: "Default entry plan"
+
+   **Pro Plan**
+
+   - Name: "Pro Plan"
+   - Price: $20/month
+   - Description: "Higher limit for advanced users"
+
+3. Note the Price IDs (start with `price_`) for each plan
+
+### 4. Set Up Webhooks
+
+1. Go to **Developers > Webhooks**
+2. Add endpoint: `https://your-domain.com/api/webhooks/stripe`
+3. Select events:
+   - `invoice.payment_succeeded`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Copy the **Webhook signing secret** (starts with `whsec_`)
+
+### 5. Environment Variables
+
+Add these to your `.env.example` file:
+
+```env
+# Stripe Configuration
+STRIPE_SECRET_KEY="sk_test_your_secret_key_here"
+STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret_here"
+STRIPE_PRICE_BASIC="price_your_basic_price_id"
+STRIPE_PRICE_PRO="price_your_pro_price_id"
+STRIPE_PUBLIC_KEY="pk_test_your_publishable_key_here"
+```
+
+## Subscription and Upgrade Instructions
+
+### Credit System Overview
+
+- **Cost per resume**: 100 credits
+- **Basic Plan**: 10,000 credits ($10/month)
+- **Pro Plan**: 20,000 credits ($20/month)
+
+### For Users
+
+1. **Free (Initial)**: New users start with 0 credits
+2. **Subscribe**: Go to `/dashboard/settings` and click "Subscribe to Basic Plan"
+3. **Upgrade**: Click "Upgrade to Pro Plan" to get 20,000 credits
+4. **Manage Billing**: Use "Manage Billing" to access Stripe Customer Portal
+
+### For Developers
+
+- Credits are automatically added when subscriptions are created/renewed
+- Webhooks handle real-time credit updates
+- All subscription events are logged for debugging
+
+## Credit Consumption During PDF Scraping
+
+### How Credits Work
+
+Every time a user uploads and processes a resume, the system:
+
+1. **Pre-Check**: Verifies user has ≥100 credits before starting OpenAI processing
+2. **Processing**: Calls OpenAI API and extracts structured data
+3. **Deduction**: Subtracts exactly 100 credits from user's balance
+4. **Storage**: Saves extracted JSON data to database
+
+### Insufficient Credits Flow
+
+If a user has fewer than 100 credits:
+
+- Upload is blocked with friendly error message
+- Toast notification suggests upgrading subscription
+- Redirect to settings page offered
+
+### Credit Balance Display
+
+- Real-time credit balance shown in dashboard header
+- Settings page shows current plan and remaining credits
+- Automatic credit top-ups on subscription renewal
+
+### Example Usage
+
+```
+User uploads resume (500KB PDF)
+→ System checks: 200 credits available ✓
+→ PDF converted to images via PDF.js
+→ Images uploaded to Supabase storage
+→ Signed URLs generated (10min expiry)
+→ OpenAI processes images → structured JSON
+→ 100 credits deducted (200 → 100 remaining)
+→ Resume data stored in database
+→ Success toast + history updated
+```
