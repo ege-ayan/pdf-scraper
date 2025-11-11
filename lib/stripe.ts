@@ -1,6 +1,10 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
-import { PlanType } from "@/types";
+import {
+  PlanType,
+  CreatePortalSessionResult,
+  StripeWebhookEventType,
+} from "@/types";
 import {
   CREDITS_PER_SCRAPE,
   STRIPE_PRICES,
@@ -16,7 +20,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function createOrRetrieveCustomer(userId: string, email: string) {
+async function createOrRetrieveCustomer(userId: string, email: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { stripeCustomerId: true },
@@ -123,7 +127,7 @@ export async function createCheckoutSession(
   return session;
 }
 
-export async function createPortalSession(customerId: string) {
+async function createPortalSession(customerId: string) {
   try {
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
@@ -150,7 +154,7 @@ export async function createPortalSession(customerId: string) {
   }
 }
 
-export async function handleSubscriptionUpdate(
+async function handleSubscriptionUpdate(
   customerId: string,
   subscription: Stripe.Subscription
 ) {
@@ -224,7 +228,7 @@ export async function handleSubscriptionUpdate(
   }
 }
 
-export async function handleSubscriptionDelete(customerId: string) {
+async function handleSubscriptionDelete(customerId: string) {
   const user = await prisma.user.findFirst({
     where: { stripeCustomerId: customerId },
   });
@@ -309,4 +313,190 @@ export async function getUserCredits(userId: string) {
   });
 
   return user;
+}
+
+export async function createPortalSessionForUser(
+  userId: string
+): Promise<CreatePortalSessionResult> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeCustomerId: true },
+    });
+
+    if (!user?.stripeCustomerId) {
+      return {
+        success: false,
+        error: {
+          message: "No active subscription found",
+          status: 400,
+        },
+      };
+    }
+
+    const portalSession = await createPortalSession(user.stripeCustomerId);
+
+    return {
+      success: true,
+      data: {
+        url: portalSession.url,
+      },
+    };
+  } catch (error: any) {
+    console.error("Portal session creation error:", error);
+
+    if (error.message?.includes("No active subscriptions found")) {
+      return {
+        success: false,
+        error: {
+          message:
+            "No active subscription found. Please subscribe to a plan first.",
+          status: 400,
+        },
+      };
+    }
+
+    return {
+      success: false,
+      error: {
+        message: "Failed to create portal session",
+        status: 500,
+      },
+    };
+  }
+}
+
+async function handleSubscriptionUpdatedWebhook(
+  subscription: Stripe.Subscription
+): Promise<boolean> {
+  try {
+    console.log(`🔄 Processing subscription update: ${subscription.id}`);
+
+    if (!subscription.customer || typeof subscription.customer !== "string") {
+      console.error("❌ Invalid customer ID in subscription.updated");
+      return false;
+    }
+
+    await handleSubscriptionUpdate(subscription.customer, subscription);
+
+    console.log(`✅ Subscription updated: ${subscription.id}`);
+    return true;
+  } catch (error) {
+    console.error(
+      `❌ Failed to process subscription update: ${subscription.id}`,
+      error
+    );
+    return false;
+  }
+}
+
+async function handleSubscriptionDeletedWebhook(
+  subscription: Stripe.Subscription
+): Promise<boolean> {
+  try {
+    console.log(`🗑️ Processing subscription deletion: ${subscription.id}`);
+
+    if (!subscription.customer || typeof subscription.customer !== "string") {
+      console.error("❌ Invalid customer ID in subscription.deleted");
+      return false;
+    }
+
+    await handleSubscriptionDelete(subscription.customer);
+
+    console.log(`✅ Subscription deactivated: ${subscription.id}`);
+    return true;
+  } catch (error) {
+    console.error(
+      `❌ Failed to process subscription deletion: ${subscription.id}`,
+      error
+    );
+    return false;
+  }
+}
+
+async function handleInvoicePaidWebhook(
+  invoice: Stripe.Invoice
+): Promise<boolean> {
+  console.log(
+    `💰 Processing invoice payment - activating subscription and adding credits: ${invoice.id}`
+  );
+
+  if (!invoice.customer || typeof invoice.customer !== "string") {
+    console.error("❌ Invalid customer ID in invoice.paid");
+    return false;
+  }
+
+  let subscriptionId: string | null = null;
+
+  const invoiceSubscription = (invoice as any).subscription;
+  if (invoiceSubscription) {
+    subscriptionId =
+      typeof invoiceSubscription === "string"
+        ? invoiceSubscription
+        : invoiceSubscription.id;
+  }
+
+  if (!subscriptionId) {
+    console.log(
+      `🔍 No subscription reference in invoice, searching for active subscriptions...`
+    );
+
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: invoice.customer,
+        status: "active",
+        limit: 5,
+      });
+
+      if (subscriptions.data.length > 0) {
+        subscriptionId = subscriptions.data[0].id;
+        console.log(`✅ Found active subscription: ${subscriptionId}`);
+      } else {
+        console.log(`⚠️ No active subscriptions found for customer`);
+        return true;
+      }
+    } catch (error) {
+      console.error(`❌ Error searching for subscriptions:`, error);
+      return false;
+    }
+  }
+
+  console.log(
+    `📋 Processing subscription ${subscriptionId} for invoice ${invoice.id}`
+  );
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  console.log(
+    `📄 Subscription status: ${subscription.status}, plan: ${subscription.items.data[0]?.price.id}`
+  );
+
+  await handleSubscriptionUpdate(invoice.customer, subscription);
+
+  console.log(`✅ Subscription activated and credits added: ${invoice.id}`);
+  return true;
+}
+
+export async function processWebhookEvent(
+  event: Stripe.Event
+): Promise<boolean> {
+  switch (event.type) {
+    case StripeWebhookEventType.INVOICE_PAID:
+      return await handleInvoicePaidWebhook(
+        event.data.object as Stripe.Invoice
+      );
+
+    case StripeWebhookEventType.CUSTOMER_SUBSCRIPTION_UPDATED:
+      return await handleSubscriptionUpdatedWebhook(
+        event.data.object as Stripe.Subscription
+      );
+
+    case StripeWebhookEventType.CUSTOMER_SUBSCRIPTION_DELETED:
+      return await handleSubscriptionDeletedWebhook(
+        event.data.object as Stripe.Subscription
+      );
+
+    default:
+      console.log(`⚠️ Unhandled event type: ${event.type}`);
+      return false;
+  }
 }

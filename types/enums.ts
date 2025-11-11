@@ -44,3 +44,9 @@ export enum PlanType {
 export enum ErrorType {
   INSUFFICIENT_CREDITS = "INSUFFICIENT_CREDITS",
 }
+
+export enum StripeWebhookEventType {
+  INVOICE_PAID = "invoice.paid",
+  CUSTOMER_SUBSCRIPTION_UPDATED = "customer.subscription.updated",
+  CUSTOMER_SUBSCRIPTION_DELETED = "customer.subscription.deleted",
+}

@@ -1,4 +1,10 @@
-import { EmploymentType, LocationType, Degree, LanguageLevel, ProcessingStep } from "./enums";
+import {
+  EmploymentType,
+  LocationType,
+  Degree,
+  LanguageLevel,
+  ProcessingStep,
+} from "./enums";
 
 export interface ResumeData {
   profile: {
@@ -99,4 +105,51 @@ export interface UseResumeProcessingReturn {
   hasFile: boolean;
   isComplete: boolean;
   isIdle: boolean;
+}
+
+// Business Logic Interfaces
+export interface ResumeHistoryItem {
+  id: string;
+  fileName: string;
+  uploadedAt: Date;
+  resumeData: any;
+}
+
+export interface CreateResumeParams {
+  fileName: string;
+  imageUrls: string[];
+  userId: string;
+}
+
+export interface CreateResumeResult {
+  success: boolean;
+  data?: {
+    message: string;
+    resumeHistory: ResumeHistoryItem;
+  };
+  error?: {
+    message: string;
+    status: number;
+    details?: any;
+  };
+}
+
+export interface GetResumeHistoryResult {
+  success: boolean;
+  data?: ResumeHistoryItem[];
+  error?: {
+    message: string;
+    status: number;
+  };
+}
+
+export interface GetResumeByIdResult {
+  success: boolean;
+  data?: any;
+  error?: { message: string; status: number };
+}
+
+export interface DeleteResumeResult {
+  success: boolean;
+  error?: { message: string; status: number };
 }

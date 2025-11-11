@@ -1,44 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createPortalSession } from "@/lib/stripe";
-import { prisma } from "@/lib/prisma";
+import { createPortalSessionForUser } from "@/lib/stripe";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { stripeCustomerId: true },
-    });
+    const result = await createPortalSessionForUser(session.user.id);
 
-    if (!user?.stripeCustomerId) {
+    if (!result.success) {
       return NextResponse.json(
-        { message: "No active subscription found" },
-        { status: 400 }
+        { message: result.error!.message },
+        { status: result.error!.status }
       );
     }
 
-    const portalSession = await createPortalSession(user.stripeCustomerId);
-
-    return NextResponse.json({ url: portalSession.url });
-  } catch (error: any) {
-    console.error("Portal session creation error:", error);
-
-    if (error.message?.includes("No active subscriptions found")) {
-      return NextResponse.json(
-        {
-          message:
-            "No active subscription found. Please subscribe to a plan first.",
-        },
-        { status: 400 }
-      );
-    }
-
+    return NextResponse.json(result.data);
+  } catch (error) {
+    console.error("Portal session creation API error:", error);
     return NextResponse.json(
       { message: "Failed to create portal session" },
       { status: 500 }

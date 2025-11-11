@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getResumeById, deleteResume } from "@/lib/resume";
 
 export async function GET(
   _request: NextRequest,
@@ -15,29 +15,18 @@ export async function GET(
 
     const { id } = await params;
 
-    const resume = await prisma.resumeHistory.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-      select: {
-        id: true,
-        fileName: true,
-        uploadedAt: true,
-        resumeData: true,
-      },
-    });
+    const result = await getResumeById(id, session.user.id);
 
-    if (!resume) {
+    if (!result.success) {
       return NextResponse.json(
-        { message: "Resume not found" },
-        { status: 404 }
+        { message: result.error!.message },
+        { status: result.error!.status }
       );
     }
 
-    return NextResponse.json(resume);
+    return NextResponse.json(result.data);
   } catch (error) {
-    console.error("Fetch resume error:", error);
+    console.error("Resume fetch API error:", error);
     return NextResponse.json(
       { message: "Failed to fetch resume" },
       { status: 500 }
@@ -57,31 +46,20 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const existingResume = await prisma.resumeHistory.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    });
+    const result = await deleteResume(id, session.user.id);
 
-    if (!existingResume) {
+    if (!result.success) {
       return NextResponse.json(
-        { message: "Resume not found" },
-        { status: 404 }
+        { message: result.error!.message },
+        { status: result.error!.status }
       );
     }
-
-    await prisma.resumeHistory.delete({
-      where: {
-        id,
-      },
-    });
 
     return NextResponse.json({
       message: "Resume deleted successfully",
     });
   } catch (error) {
-    console.error("Delete resume error:", error);
+    console.error("Resume delete API error:", error);
     return NextResponse.json(
       { message: "Failed to delete resume" },
       { status: 500 }
